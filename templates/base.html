@@ -35,7 +35,7 @@
                     </span>
                 </a>
 
-                <div class="hidden 2xl:flex items-center gap-0.5">
+                <div class="hidden xl:flex items-center gap-0.5">
                     <a href="{{ url_for('fishes') }}" class="fe-nav-link">Рыбы</a>
                     <a href="{{ url_for('spots') }}" class="fe-nav-link">Вести</a>
                     <a href="{{ url_for('map_page') }}" class="fe-nav-link">Карта</a>
@@ -60,14 +60,14 @@
                     <button id="theme-toggle" class="fe-theme-btn" type="button" aria-label="Переключить цветовую тему" title="Переключить тему">
                         <i id="theme-icon" class="fa-solid fa-sun" aria-hidden="true"></i>
                     </button>
-                    <button id="mobile-menu-btn" class="fe-menu-btn 2xl:hidden" type="button" aria-label="Открыть меню" aria-expanded="false" aria-controls="mobile-menu">
+                    <button id="mobile-menu-btn" class="fe-menu-btn xl:hidden" type="button" aria-label="Открыть меню" aria-expanded="false" aria-controls="mobile-menu">
                         <i class="fa-solid fa-bars text-lg" aria-hidden="true"></i>
                     </button>
                 </div>
             </div>
         </nav>
 
-        <div id="mobile-menu" class="fe-mobile-menu hidden 2xl:hidden px-4 sm:px-6 py-4">
+        <div id="mobile-menu" class="fe-mobile-menu hidden xl:hidden px-4 sm:px-6 py-4">
             <div class="max-w-[1440px] mx-auto grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {% if current_user.is_authenticated %}
                     <a href="{{ url_for('user_profile', username=current_user.username) }}" class="col-span-2 sm:col-span-3 rounded-xl px-3 py-3 font-semibold"><i class="fa-regular fa-user mr-2"></i>{{ current_user.username }}</a>
