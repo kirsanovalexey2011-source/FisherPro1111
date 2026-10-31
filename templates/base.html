@@ -53,8 +53,9 @@
                         <a href="{{ url_for('user_profile', username=current_user.username) }}" class="hidden sm:inline-flex items-center gap-2 fe-button-secondary !min-h-[42px] !py-2 !px-3 text-sm no-underline">
                             <i class="fa-regular fa-user"></i><span>{{ current_user.username }}</span>
                         </a>
+                        <form method="post" action="{{ url_for('logout') }}" class="hidden sm:block"><button type="submit" class="fe-button-secondary !min-h-[42px] !py-2 !px-3 text-sm">Выйти</button></form>
                     {% else %}
-                        <a href="{{ url_for('login_test') }}" class="hidden sm:inline-flex fe-button !min-h-[42px] !py-2 !px-4 text-sm no-underline">
+                        <a href="{{ url_for('login') }}" class="hidden sm:inline-flex fe-button !min-h-[42px] !py-2 !px-4 text-sm no-underline">
                             <i class="fa-solid fa-arrow-right-to-bracket"></i> Войти
                         </a>
                     {% endif %}
@@ -73,7 +74,7 @@
                 {% if current_user.is_authenticated %}
                     <a href="{{ url_for('user_profile', username=current_user.username) }}" class="col-span-2 sm:col-span-3 rounded-xl px-3 py-3 font-semibold"><i class="fa-regular fa-user mr-2"></i>{{ current_user.username }}</a>
                 {% else %}
-                    <a href="{{ url_for('login_test') }}" class="col-span-2 sm:col-span-3 rounded-xl px-3 py-3 font-semibold"><i class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Войти</a>
+                    <a href="{{ url_for('login') }}" class="col-span-2 sm:col-span-3 rounded-xl px-3 py-3 font-semibold"><i class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Войти</a>
                 {% endif %}
                 <a href="{{ url_for('fishes') }}" class="rounded-xl px-3 py-3 hover:bg-black/5 dark:hover:bg-white/5">Рыбы</a>
                 <a href="{{ url_for('spots') }}" class="rounded-xl px-3 py-3 hover:bg-black/5 dark:hover:bg-white/5">Вести</a>
