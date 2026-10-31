@@ -1,60 +1,108 @@
 {% extends "base.html" %}
 
+{% block title %}ФишЭксперт — рыбалка, водоёмы и уловы{% endblock %}
+
 {% block content %}
-<div class="space-y-12">
-    <!-- Главный промо-баннер -->
-    <div class="relative rounded-2xl overflow-hidden bg-gradient-to-r from-cyan-900 to-gray-900 border border-gray-800 p-8 md:p-16 flex flex-col items-start justify-center shadow-xl">
-        <span class="bg-cyan-500/20 text-cyan-300 text-xs font-semibold px-3 py-1 rounded-full border border-cyan-500/30 mb-4">Интерактивный справочник</span>
-        <h1 class="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-4">Всё о рыбалке в России</h1>
-        <p class="text-gray-300 text-lg max-w-2xl mb-8 leading-relaxed">Подробные карточки видов рыб, точки ловли на интерактивной карте, разборы приманок, узлы и рецепты блюд на одном портале.</p>
-        <a href="{{ url_for('fishes') }}" class="bg-cyan-500 hover:bg-cyan-400 text-gray-950 font-bold px-6 py-3 rounded-lg transition duration-200">Перейти в каталог рыб</a>
-    </div>
+<div class="space-y-16 md:space-y-20">
+    <section class="fe-home-hero" aria-labelledby="home-title">
+        <div class="fe-home-hero-content">
+            <span class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[.16em] text-emerald-100 backdrop-blur">
+                <span class="h-2 w-2 rounded-full bg-emerald-300"></span> Рыболовное сообщество
+            </span>
+            <h1 id="home-title" class="mt-6 mb-5">Больше, чем просто рыбалка.</h1>
+            <p class="mb-8">Открывай новые места, изучай повадки рыб, делись своими уловами и находи вдохновение для следующего выхода на воду.</p>
+            <div class="flex flex-col sm:flex-row flex-wrap gap-3">
+                <a href="{{ url_for('map_page') }}" class="fe-button"><i class="fa-solid fa-map-location-dot"></i> Открыть карту</a>
+                <a href="{{ url_for('spots') }}" class="inline-flex items-center justify-center gap-2 min-h-[48px] rounded-[14px] border border-white/30 bg-white/10 px-5 py-3 font-bold text-white no-underline backdrop-blur hover:bg-white/20">
+                    <i class="fa-solid fa-camera"></i> Смотреть уловы
+                </a>
+            </div>
+            <div class="mt-10 flex flex-wrap gap-x-8 gap-y-4 text-sm text-emerald-50/85">
+                <span><i class="fa-solid fa-location-dot mr-2 text-emerald-300"></i>Новые места</span>
+                <span><i class="fa-solid fa-fish-fins mr-2 text-emerald-300"></i>Каталог рыб</span>
+                <span><i class="fa-solid fa-users mr-2 text-emerald-300"></i>Опыт сообщества</span>
+            </div>
+        </div>
+    </section>
 
-    <!-- Быстрая навигация по разделам (6 блоков) -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <section aria-labelledby="explore-title">
+        <div class="mb-7 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+            <div>
+                <span class="fe-eyebrow"><i class="fa-solid fa-compass"></i> Исследуй и открывай</span>
+                <h2 id="explore-title" class="fe-section-title mt-2">Всё для твоей следующей рыбалки</h2>
+                <p class="fe-muted mt-2 max-w-2xl">Полезные инструменты, проверенная информация и идеи для поездок — в одном месте.</p>
+            </div>
+            <a href="{{ url_for('tools') }}" class="fe-button-secondary no-underline">Все инструменты <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
 
-        <!-- 1. Каталог рыб -->
-        <a href="{{ url_for('fishes') }}" class="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-cyan-500 transition duration-300 group shadow-lg hover:-translate-y-1">
-            <i class="fa-solid fa-fish text-3xl text-cyan-400 mb-3 group-hover:scale-110 transition-transform duration-300 block"></i>
-            <h3 class="text-xl font-bold text-white mb-1 group-hover:text-cyan-400 transition">Каталог Рыб</h3>
-            <p class="text-gray-400 text-sm leading-relaxed">Сложность поимки, места обитания, наживки и характеристики.</p>
-        </a>
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
+            <a href="{{ url_for('map_page') }}" class="fe-card fe-card-hover fe-feature-card">
+                <span class="fe-feature-icon"><i class="fa-solid fa-map-location-dot"></i></span>
+                <h3>Карта уловов</h3>
+                <p class="mt-2">Ищи интересные точки, изучай места и отмечай собственные рыболовные открытия.</p>
+                <span class="mt-5 inline-flex items-center gap-2 text-sm font-bold" style="color:var(--fe-accent)">Открыть карту <i class="fa-solid fa-arrow-right"></i></span>
+            </a>
+            <a href="{{ url_for('waters') }}" class="fe-card fe-card-hover fe-feature-card">
+                <span class="fe-feature-icon"><i class="fa-solid fa-water"></i></span>
+                <h3>Водоёмы</h3>
+                <p class="mt-2">Реки, озёра и другие локации — выбирай направление для следующей поездки.</p>
+                <span class="mt-5 inline-flex items-center gap-2 text-sm font-bold" style="color:var(--fe-accent)">Найти водоём <i class="fa-solid fa-arrow-right"></i></span>
+            </a>
+            <a href="{{ url_for('fishes') }}" class="fe-card fe-card-hover fe-feature-card">
+                <span class="fe-feature-icon"><i class="fa-solid fa-fish-fins"></i></span>
+                <h3>Энциклопедия рыб</h3>
+                <p class="mt-2">Изучай виды, места обитания, особенности поведения и способы ловли.</p>
+                <span class="mt-5 inline-flex items-center gap-2 text-sm font-bold" style="color:var(--fe-accent)">Изучить виды <i class="fa-solid fa-arrow-right"></i></span>
+            </a>
+            <a href="{{ url_for('spots') }}" class="fe-card fe-card-hover fe-feature-card">
+                <span class="fe-feature-icon"><i class="fa-solid fa-camera-retro"></i></span>
+                <h3>Вести с водоёмов</h3>
+                <p class="mt-2">Читай отчёты рыбаков, смотри фотографии и делись впечатлениями.</p>
+                <span class="mt-5 inline-flex items-center gap-2 text-sm font-bold" style="color:var(--fe-accent)">Читать отчёты <i class="fa-solid fa-arrow-right"></i></span>
+            </a>
+            <a href="{{ url_for('tackle') }}" class="fe-card fe-card-hover fe-feature-card">
+                <span class="fe-feature-icon"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+                <h3>Снасти и приманки</h3>
+                <p class="mt-2">Разбирайся в оборудовании и подбирай снасти под условия ловли.</p>
+                <span class="mt-5 inline-flex items-center gap-2 text-sm font-bold" style="color:var(--fe-accent)">Выбрать снасти <i class="fa-solid fa-arrow-right"></i></span>
+            </a>
+            <a href="{{ url_for('knots') }}" class="fe-card fe-card-hover fe-feature-card">
+                <span class="fe-feature-icon"><i class="fa-solid fa-link"></i></span>
+                <h3>Рыболовные узлы</h3>
+                <p class="mt-2">Осваивай надёжные соединения для лески, поводков и крючков.</p>
+                <span class="mt-5 inline-flex items-center gap-2 text-sm font-bold" style="color:var(--fe-accent)">Посмотреть узлы <i class="fa-solid fa-arrow-right"></i></span>
+            </a>
+            <a href="{{ url_for('recipes') }}" class="fe-card fe-card-hover fe-feature-card">
+                <span class="fe-feature-icon"><i class="fa-solid fa-utensils"></i></span>
+                <h3>Рыболовная кухня</h3>
+                <p class="mt-2">Идеи блюд и рецепты, которые помогут вкусно приготовить улов.</p>
+                <span class="mt-5 inline-flex items-center gap-2 text-sm font-bold" style="color:var(--fe-accent)">Открыть рецепты <i class="fa-solid fa-arrow-right"></i></span>
+            </a>
+            <a href="{{ url_for('tools') }}" class="fe-card fe-card-hover fe-feature-card">
+                <span class="fe-feature-icon"><i class="fa-solid fa-compass-drafting"></i></span>
+                <h3>Полезные инструменты</h3>
+                <p class="mt-2">Практичные помощники для подготовки и планирования рыбалки.</p>
+                <span class="mt-5 inline-flex items-center gap-2 text-sm font-bold" style="color:var(--fe-accent)">Открыть инструменты <i class="fa-solid fa-arrow-right"></i></span>
+            </a>
+            <a href="{{ url_for('contacts') }}" class="fe-card fe-card-hover fe-feature-card">
+                <span class="fe-feature-icon"><i class="fa-regular fa-message"></i></span>
+                <h3>Связаться с нами</h3>
+                <p class="mt-2">Есть идея или вопрос? Напиши команде проекта.</p>
+                <span class="mt-5 inline-flex items-center gap-2 text-sm font-bold" style="color:var(--fe-accent)">Контакты <i class="fa-solid fa-arrow-right"></i></span>
+            </a>
+        </div>
+    </section>
 
-        <!-- 2. Карта отчётов -->
-        <a href="{{ url_for('map_page') }}" class="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-cyan-500 transition duration-300 group shadow-lg hover:-translate-y-1">
-            <i class="fa-solid fa-map-location-dot text-3xl text-cyan-400 mb-3 group-hover:scale-110 transition-transform duration-300 block"></i>
-            <h3 class="text-xl font-bold text-white mb-1 group-hover:text-cyan-400 transition">Карта Отчётов</h3>
-            <p class="text-gray-400 text-sm leading-relaxed">Отметки о поимках с подробностями от реальных рыбаков.</p>
-        </a>
-
-        <!-- 3. Снасти и Приманки -->
-        <a href="{{ url_for('tackle') }}" class="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-cyan-500 transition duration-300 group shadow-lg hover:-translate-y-1">
-            <i class="fa-solid fa-toolbox text-3xl text-cyan-400 mb-3 group-hover:scale-110 transition-transform duration-300 block"></i>
-            <h3 class="text-xl font-bold text-white mb-1 group-hover:text-cyan-400 transition">Снасти и Приманки</h3>
-            <p class="text-gray-400 text-sm leading-relaxed">Разбор воблеров, силикона, спиннингов и оснасток.</p>
-        </a>
-
-        <!-- 4. Каталог Водоёмов -->
-        <a href="{{ url_for('waters') }}" class="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-cyan-500 transition duration-300 group shadow-lg hover:-translate-y-1">
-            <i class="fa-solid fa-water text-3xl text-cyan-400 mb-3 group-hover:scale-110 transition-transform duration-300 block"></i>
-            <h3 class="text-xl font-bold text-white mb-1 group-hover:text-cyan-400 transition">Каталог Водоёмов</h3>
-            <p class="text-gray-400 text-sm leading-relaxed">Реки, озёра и пруды с геолокацией, глубинами и видами рыб.</p>
-        </a>
-
-        <!-- 5. Рыболовные Узлы -->
-        <a href="{{ url_for('knots') }}" class="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-cyan-500 transition duration-300 group shadow-lg hover:-translate-y-1">
-            <i class="fa-solid fa-gears text-3xl text-cyan-400 mb-3 group-hover:scale-110 transition-transform duration-300 block"></i>
-            <h3 class="text-xl font-bold text-white mb-1 group-hover:text-cyan-400 transition">Рыболовные Узлы</h3>
-            <p class="text-gray-400 text-sm leading-relaxed">Пошаговые схемы вязки узлов для крючков, лески и плетёнки.</p>
-        </a>
-
-        <!-- 6. Рыболовная Кухня -->
-        <a href="{{ url_for('recipes') }}" class="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-cyan-500 transition duration-300 group shadow-lg hover:-translate-y-1">
-            <i class="fa-solid fa-utensils text-3xl text-cyan-400 mb-3 group-hover:scale-110 transition-transform duration-300 block"></i>
-            <h3 class="text-xl font-bold text-white mb-1 group-hover:text-cyan-400 transition">Рыболовная Кухня</h3>
-            <p class="text-gray-400 text-sm leading-relaxed">Проверенные рецепты ухи, запекания и копчения улова.</p>
-        </a>
-
-    </div>
+    <section class="fe-card overflow-hidden" aria-labelledby="community-title">
+        <div class="grid grid-cols-1 lg:grid-cols-[1.1fr_.9fr]">
+            <div class="p-7 md:p-10 lg:p-12">
+                <span class="fe-eyebrow"><i class="fa-solid fa-people-group"></i> Сообщество рыболовов</span>
+                <h2 id="community-title" class="fe-heading mt-3 text-3xl md:text-4xl">Каждая рыбалка — это история.</h2>
+                <p class="fe-muted mt-4 leading-7">Сохраняй воспоминания о поездках, делись опытом и вдохновляй других исследовать новые места. Хорошие советы становятся ещё ценнее, когда ими делятся.</p>
+                <a href="{{ url_for('spots') }}" class="fe-button mt-7 no-underline">Перейти к отчётам <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+            <div class="min-h-[240px] lg:min-h-full bg-cover bg-center" role="img" aria-label="Спокойное озеро среди леса" style="background-image:url('https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=85')"></div>
+        </div>
+    </section>
 </div>
 {% endblock %}
