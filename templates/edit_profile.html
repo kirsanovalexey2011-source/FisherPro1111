@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Редактирование профиля — ФишЭксперт{% endblock %}
+{% block content %}
+<section class="fe-auth-wrap">
+  <div class="fe-auth-card fe-edit-card">
+    <p class="fe-eyebrow">Ваш аккаунт</p>
+    <h1>Редактировать профиль</h1>
+    <p class="fe-muted">Расскажите другим рыбакам немного о себе.</p>
+    <form method="post" class="fe-auth-form">
+      <label>О себе<textarea class="fe-input" name="bio" rows="5" maxlength="1000" placeholder="Какие способы ловли предпочитаете?">{{ current_user.bio or '' }}</textarea><span class="fe-muted text-xs">До 1000 символов.</span></label>
+      <label>Любимая снасть<input class="fe-input" type="text" name="favorite_tackle" maxlength="100" value="{{ current_user.favorite_tackle or '' }}" placeholder="Например, спиннинг"></label>
+      <button class="fe-button w-full" type="submit">Сохранить изменения</button>
+      <a class="fe-button-secondary w-full text-center no-underline" href="{{ url_for('user_profile', username=current_user.username) }}">Отмена</a>
+    </form>
+  </div>
+</section>
+{% endblock %}
