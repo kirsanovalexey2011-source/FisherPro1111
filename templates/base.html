@@ -53,7 +53,7 @@
                         <a href="{{ url_for('user_profile', username=current_user.username) }}" class="hidden sm:inline-flex items-center gap-2 fe-button-secondary !min-h-[42px] !py-2 !px-3 text-sm no-underline">
                             <i class="fa-regular fa-user"></i><span>{{ current_user.username }}</span>
                         </a>
-                        <form method="post" action="{{ url_for('logout') }}" class="hidden sm:block"><button type="submit" class="fe-button-secondary !min-h-[42px] !py-2 !px-3 text-sm">Выйти</button></form>
+                        <form method="post" action="{{ url_for('logout') }}" class="hidden sm:block"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button type="submit" class="fe-button-secondary !min-h-[42px] !py-2 !px-3 text-sm">Выйти</button></form>
                     {% else %}
                         <a href="{{ url_for('login') }}" class="hidden sm:inline-flex fe-button !min-h-[42px] !py-2 !px-4 text-sm no-underline">
                             <i class="fa-solid fa-arrow-right-to-bracket"></i> Войти
