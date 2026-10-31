@@ -703,6 +703,48 @@ def tools():
     return render_template('tools.html')
 
 
+@app.route('/gear-advisor', methods=['GET', 'POST'])
+def gear_advisor():
+    """Подбор снастей по выбранной целевой рыбе на основе локального каталога."""
+    fishes_data = load_json_file('fishes.json')
+    tackle_data = load_json_file('tackle.json')
+    selected_fish_id = (request.values.get('fish') or '').strip()
+    selected_fish = next(
+        (item for item in fishes_data if str(item.get('id')) == selected_fish_id),
+        None
+    )
+    recommendations = []
+
+    if selected_fish:
+        fish_name = str(selected_fish.get('name') or '').strip().casefold()
+        for item in tackle_data:
+            target_fish = item.get('target_fish') or []
+            if isinstance(target_fish, str):
+                target_fish = [target_fish]
+            if any(fish_name == str(target).strip().casefold() for target in target_fish):
+                recommendations.append(item)
+
+        # Если в каталоге нет точного совпадения, показываем подходы из карточки рыбы.
+        if not recommendations:
+            fish_tackle = selected_fish.get('tackle') or ''
+            fish_baits = selected_fish.get('baits') or ''
+            recommendations.append({
+                'id': None,
+                'title': 'Рекомендации из энциклопедии рыб',
+                'category': 'Базовый комплект',
+                'fishing_type': selected_fish.get('methods') or 'Уточните способ ловли',
+                'description': 'В каталоге пока нет снастей с точным совпадением по этому виду. Используйте рекомендации ниже как отправную точку.',
+                'tips': 'Рекомендуемые снасти: ' + str(fish_tackle) + '. Приманки и наживки: ' + str(fish_baits) + '.'
+            })
+
+    return render_template(
+        'gear_advisor.html',
+        fishes=fishes_data,
+        selected_fish=selected_fish,
+        recommendations=recommendations
+    )
+
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
