@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Регистрация' if mode == 'register' else 'Вход' }} — ФишЭксперт{% endblock %}
+{% block content %}
+<section class="fe-auth-wrap">
+  <div class="fe-auth-card">
+    <div class="fe-auth-mark"><i class="fa-solid fa-fish-fins"></i></div>
+    <p class="fe-eyebrow">Сообщество ФишЭксперт</p>
+    <h1>{{ 'Создать аккаунт' if mode == 'register' else 'С возвращением!' }}</h1>
+    <p class="fe-muted">{{ 'Зарегистрируйтесь, чтобы вести профиль и общаться с рыбаками.' if mode == 'register' else 'Войдите, чтобы открыть свой профиль.' }}</p>
+    <form method="post" class="fe-auth-form">
+      {% if mode == 'register' %}
+      <label>Имя пользователя<input class="fe-input" type="text" name="username" minlength="3" maxlength="64" autocomplete="username" required value="{{ request.form.get('username','') }}"></label>
+      <label>Email<input class="fe-input" type="email" name="email" maxlength="120" autocomplete="email" required value="{{ request.form.get('email','') }}"></label>
+      {% else %}
+      <label>Имя пользователя или email<input class="fe-input" type="text" name="identity" autocomplete="username" required value="{{ request.form.get('identity','') }}"></label>
+      {% endif %}
+      <label>Пароль<input class="fe-input" type="password" name="password" minlength="{{ 10 if mode == 'register' else 1 }}" autocomplete="{{ 'new-password' if mode == 'register' else 'current-password' }}" required></label>
+      {% if mode == 'register' %}<p class="fe-muted text-xs">Минимум 10 символов. Используйте уникальный пароль.</p>{% else %}<label class="fe-auth-remember"><input type="checkbox" name="remember" value="1"> Запомнить меня</label>{% endif %}
+      <button class="fe-button w-full" type="submit">{{ 'Зарегистрироваться' if mode == 'register' else 'Войти' }}</button>
+    </form>
+    <p class="fe-auth-switch">{% if mode == 'register' %}Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти</a>{% else %}Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрироваться</a>{% endif %}</p>
+  </div>
+</section>
+{% endblock %}
