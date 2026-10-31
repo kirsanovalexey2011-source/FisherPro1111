@@ -3,6 +3,8 @@ import os
 import math
 import re
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import inspect
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
@@ -15,7 +17,7 @@ except ImportError:
 app = Flask(__name__)
 
 # --- НАСТРОЙКИ ПРИЛОЖЕНИЯ И БАЗЫ ДАННЫХ ---
-app.config['SECRET_KEY'] = 'fish-expert-secret-key-123'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fish-expert-dev-key-change-before-deploy')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -71,6 +73,13 @@ class User(UserMixin, db.Model):
     bio = db.Column(db.Text, nullable=True)
     favorite_tackle = db.Column(db.String(100), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    password_hash = db.Column(db.String(255), nullable=True)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return bool(self.password_hash) and check_password_hash(self.password_hash, password)
 
     comments = db.relationship('Comment', backref='author', lazy='dynamic')
     likes = db.relationship('Like', backref='user', lazy='dynamic')
@@ -298,18 +307,80 @@ def load_spots():
 
 # === ЭТАП 2: РОУТЫ СОЦИАЛКИ (ПРОФИЛИ, ЛАЙКИ, КОММЕНТАРИИ) ===
 
-@app.route('/login_test')
-def login_test():
-    """Быстрый вход для тестирования функций социалки"""
-    user = User.query.first()
-    if not user:
-        user = User(username='БывалыйРыбак', email='fisher@example.com', bio='Ловлю на спиннинг и фидер с 2010 года.',
-                    favorite_tackle='Спиннинг')
-        db.session.add(user)
-        db.session.commit()
-    login_user(user)
-    flash(f'Вы вошли как {user.username}', 'success')
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('user_profile', username=current_user.username))
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+        if not 3 <= len(username) <= 64:
+            flash('Имя пользователя должно содержать от 3 до 64 символов.', 'error')
+        elif len(email) > 120 or not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email):
+            flash('Укажите корректный адрес электронной почты.', 'error')
+        elif len(password) < 10:
+            flash('Пароль должен содержать не менее 10 символов.', 'error')
+        elif User.query.filter(db.or_(db.func.lower(User.username) == username.lower(), db.func.lower(User.email) == email)).first():
+            flash('Пользователь с таким именем или email уже существует.', 'error')
+        else:
+            user = User(username=username, email=email)
+            user.set_password(password)
+            db.session.add(user)
+            db.session.commit()
+            login_user(user)
+            flash('Аккаунт создан. Добро пожаловать!', 'success')
+            return redirect(url_for('user_profile', username=user.username))
+    return render_template('auth.html', mode='register')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('user_profile', username=current_user.username))
+    if request.method == 'POST':
+        identity = request.form.get('identity', '').strip()
+        password = request.form.get('password', '')
+        user = User.query.filter(
+            db.or_(db.func.lower(User.username) == identity.lower(),
+                   db.func.lower(User.email) == identity.lower())
+        ).first() if identity else None
+        if user and user.check_password(password):
+            login_user(user, remember=bool(request.form.get('remember')))
+            flash('Вы успешно вошли.', 'success')
+            return redirect(request.args.get('next') or url_for('user_profile', username=user.username))
+        if user and not user.password_hash:
+            flash('Для этого старого аккаунта пароль ещё не настроен. Обратитесь к администратору для безопасного восстановления доступа.', 'error')
+        else:
+            flash('Неверный логин или пароль.', 'error')
+    return render_template('auth.html', mode='login')
+
+
+@app.route('/logout', methods=['POST'])
+@login_required
+def logout():
+    logout_user()
+    flash('Вы вышли из аккаунта.', 'success')
     return redirect(url_for('index'))
+
+
+@app.route('/user/edit', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    if request.method == 'POST':
+        bio = request.form.get('bio', '').strip()
+        favorite_tackle = request.form.get('favorite_tackle', '').strip()
+        if len(bio) > 1000 or len(favorite_tackle) > 100:
+            flash('Проверьте длину полей: описание до 1000 символов, любимая снасть до 100.', 'error')
+        else:
+            current_user.bio = bio or None
+            current_user.favorite_tackle = favorite_tackle or None
+            db.session.commit()
+            flash('Профиль обновлён.', 'success')
+            return redirect(url_for('user_profile', username=current_user.username))
+    return render_template('edit_profile.html')
+
+
 
 
 @app.route('/user/<username>')
@@ -748,4 +819,9 @@ def gear_advisor():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        # Безопасная additive-миграция: добавляет только nullable-столбец.
+        # Существующие пользователи и данные не удаляются и не перезаписываются.
+        if 'password_hash' not in {column['name'] for column in inspect(db.engine).get_columns('users')}:
+            with db.engine.begin() as connection:
+                connection.exec_driver_sql('ALTER TABLE users ADD COLUMN password_hash VARCHAR(255)')
     app.run(debug=True)
