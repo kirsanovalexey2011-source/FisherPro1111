@@ -1,0 +1,76 @@
+name: Project quality checks
+
+on:
+  push:
+    branches:
+      - master
+      - design/modern-outdoor-refresh
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check Python syntax
+        run: python -m py_compile app.py
+
+      - name: Install template checker
+        run: python -m pip install --disable-pip-version-check Jinja2
+
+      - name: Validate Jinja templates, route references and CSS
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          from jinja2 import Environment
+
+          templates = sorted(Path("templates").glob("*.html"))
+          if not templates:
+              raise SystemExit("No templates found")
+
+          env = Environment()
+          for path in templates:
+              env.parse(path.read_text(encoding="utf-8"))
+              print(f"Jinja OK: {path}")
+
+          app_source = Path("app.py").read_text(encoding="utf-8")
+          route_names = set(re.findall(
+              r"@app\\.route\\([^)]*\\)\\s*(?:@\\w+(?:\\([^)]*\\))?\\s*)*def\\s+(\\w+)\\s*\\(",
+              app_source,
+          ))
+          route_names.add("static")
+
+          missing = set()
+          for path in templates:
+              source = path.read_text(encoding="utf-8")
+              for endpoint in re.findall(r"url_for\\(\\s*['\\"]([^'\\"]+)['\\"]", source):
+                  if endpoint not in route_names:
+                      missing.add(f"{path}: {endpoint}")
+          if missing:
+              raise SystemExit("Unknown url_for endpoints:\\n" + "\\n".join(sorted(missing)))
+          print(f"Route references OK: {len(route_names)} endpoints checked")
+
+          css_path = Path("static/css/modern-outdoor.css")
+          css = css_path.read_text(encoding="utf-8")
+          depth = 0
+          for char in css:
+              if char == "{":
+                  depth += 1
+              elif char == "}":
+                  depth -= 1
+              if depth < 0:
+                  raise SystemExit("CSS has an unexpected closing brace")
+          if depth:
+              raise SystemExit("CSS has unclosed braces")
+          print("CSS braces OK")
+          PY
