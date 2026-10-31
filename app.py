@@ -2,10 +2,13 @@ import json
 import os
 import math
 import re
+import secrets
+import hmac
+from urllib.parse import urlsplit
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import inspect
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 
@@ -24,6 +27,35 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+
+
+def get_csrf_token():
+    token = session.get('_csrf_token')
+    if not token:
+        token = secrets.token_urlsafe(32)
+        session['_csrf_token'] = token
+    return token
+
+
+@app.context_processor
+def inject_csrf_token():
+    return {'csrf_token': get_csrf_token}
+
+
+def validate_csrf():
+    submitted = request.form.get('_csrf_token', '')
+    expected = session.get('_csrf_token', '')
+    if not submitted or not expected or not hmac.compare_digest(submitted, expected):
+        abort(400, description='Недействительный токен безопасности формы. Обновите страницу и повторите попытку.')
+
+
+def safe_next_url(target):
+    if not target:
+        return None
+    parsed = urlsplit(target)
+    if parsed.scheme or parsed.netloc or not target.startswith('/') or target.startswith('//') or '\\\\' in target:
+        return None
+    return target
 
 YANDEX_API_KEY = "ТВОЙ_КЛЮЧ_API"
 
@@ -312,6 +344,7 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for('user_profile', username=current_user.username))
     if request.method == 'POST':
+        validate_csrf()
         username = request.form.get('username', '').strip()
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
@@ -339,6 +372,7 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for('user_profile', username=current_user.username))
     if request.method == 'POST':
+        validate_csrf()
         identity = request.form.get('identity', '').strip()
         password = request.form.get('password', '')
         user = User.query.filter(
@@ -348,7 +382,7 @@ def login():
         if user and user.check_password(password):
             login_user(user, remember=bool(request.form.get('remember')))
             flash('Вы успешно вошли.', 'success')
-            return redirect(request.args.get('next') or url_for('user_profile', username=user.username))
+            return redirect(safe_next_url(request.args.get('next')) or url_for('user_profile', username=user.username))
         if user and not user.password_hash:
             flash('Для этого старого аккаунта пароль ещё не настроен. Обратитесь к администратору для безопасного восстановления доступа.', 'error')
         else:
@@ -359,6 +393,7 @@ def login():
 @app.route('/logout', methods=['POST'])
 @login_required
 def logout():
+    validate_csrf()
     logout_user()
     flash('Вы вышли из аккаунта.', 'success')
     return redirect(url_for('index'))
@@ -368,6 +403,7 @@ def logout():
 @login_required
 def edit_profile():
     if request.method == 'POST':
+        validate_csrf()
         bio = request.form.get('bio', '').strip()
         favorite_tackle = request.form.get('favorite_tackle', '').strip()
         if len(bio) > 1000 or len(favorite_tackle) > 100:
