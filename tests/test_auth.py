@@ -1,13 +1,15 @@
 import re
 import sys
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from unittest.mock import patch
 
-import pytest
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app import app, db, User
+import pytest
+from sqlalchemy import create_engine, inspect
+
+from app import app, db, User, safe_next_url
+from scripts.migrate_auth_schema import migrate_user_auth_columns
 
 
 @pytest.fixture()
@@ -93,3 +95,42 @@ def test_password_recovery_for_legacy_account_is_one_time(client):
 
     response = client.get('/reset-password/' + reset_token, follow_redirects=False)
     assert response.status_code == 302
+
+
+def test_safe_next_url_rejects_external_redirects():
+    assert safe_next_url('/profile') == '/profile'
+    assert safe_next_url('https://attacker.example') is None
+    assert safe_next_url('//attacker.example/path') is None
+    assert safe_next_url('/\\\\attacker.example') is None
+    assert safe_next_url('/%5c%5cattacker.example') is None
+
+
+def test_additive_migration_preserves_legacy_user_data():
+    engine = create_engine('sqlite://')
+    try:
+        with engine.begin() as connection:
+            connection.exec_driver_sql(
+                'CREATE TABLE users (id INTEGER PRIMARY KEY, username VARCHAR(64) NOT NULL, email VARCHAR(120) NOT NULL)'
+            )
+            connection.exec_driver_sql(
+                "INSERT INTO users (id, username, email) VALUES (1, 'OldAngler', 'old@example.com')"
+            )
+
+        migrate_user_auth_columns(engine)
+        migrate_user_auth_columns(engine)  # Migration is idempotent.
+
+        inspector = inspect(engine)
+        columns = {column['name']: column for column in inspector.get_columns('users')}
+        assert {'password_hash', 'password_reset_token_hash', 'password_reset_sent_at'} <= set(columns)
+        assert columns['password_hash']['nullable'] is True
+
+        with engine.connect() as connection:
+            row = connection.exec_driver_sql(
+                'SELECT id, username, email, password_hash FROM users WHERE id = 1'
+            ).one()
+        assert row.id == 1
+        assert row.username == 'OldAngler'
+        assert row.email == 'old@example.com'
+        assert row.password_hash is None
+    finally:
+        engine.dispose()
