@@ -4,11 +4,15 @@ import math
 import re
 import secrets
 import hmac
+import hashlib
+import smtplib
+from email.message import EmailMessage
 from urllib.parse import urlsplit
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
@@ -112,6 +116,8 @@ class User(UserMixin, db.Model):
     favorite_tackle = db.Column(db.String(100), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     password_hash = db.Column(db.String(255), nullable=True)
+    password_reset_token_hash = db.Column(db.String(64), nullable=True)
+    password_reset_sent_at = db.Column(db.DateTime, nullable=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -399,6 +405,107 @@ def login():
         else:
             flash('Неверный логин или пароль.', 'error')
     return render_template('auth.html', mode='login')
+
+
+def send_password_reset_email(user, token):
+    host = os.environ.get('SMTP_HOST')
+    sender = os.environ.get('SMTP_FROM') or os.environ.get('SMTP_USER')
+    if not host or not sender:
+        raise RuntimeError('SMTP is not configured')
+
+    port = int(os.environ.get('SMTP_PORT', '587'))
+    message = EmailMessage()
+    message['Subject'] = 'Восстановление пароля — ФишЭксперт'
+    message['From'] = sender
+    message['To'] = user.email
+    reset_url = url_for('reset_password', token=token, _external=True)
+    message.set_content(
+        'Чтобы задать новый пароль, откройте ссылку (действует 30 минут):\n'
+        + reset_url
+        + '\nЕсли вы не запрашивали восстановление, просто проигнорируйте письмо.'
+    )
+
+    username = os.environ.get('SMTP_USER')
+    password = os.environ.get('SMTP_PASSWORD')
+    if port == 465:
+        with smtplib.SMTP_SSL(host, port, timeout=15) as smtp:
+            if username and password:
+                smtp.login(username, password)
+            smtp.send_message(message)
+    else:
+        with smtplib.SMTP(host, port, timeout=15) as smtp:
+            smtp.starttls()
+            if username and password:
+                smtp.login(username, password)
+            smtp.send_message(message)
+
+
+def make_reset_serializer():
+    return URLSafeTimedSerializer(app.config['SECRET_KEY'], salt='fish-expert-password-reset-v1')
+
+
+def get_reset_user(token):
+    try:
+        payload = make_reset_serializer().loads(token, max_age=1800)
+    except (BadSignature, SignatureExpired):
+        return None
+    if not isinstance(payload, dict) or not payload.get('user_id') or not payload.get('nonce'):
+        return None
+    user = db.session.get(User, payload['user_id'])
+    if not user or not user.password_reset_token_hash or not user.password_reset_sent_at:
+        return None
+    token_hash = hashlib.sha256(payload['nonce'].encode('utf-8')).hexdigest()
+    if not hmac.compare_digest(user.password_reset_token_hash, token_hash):
+        return None
+    return user
+
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        validate_csrf()
+        email = request.form.get('email', '').strip().lower()
+        user = User.query.filter(db.func.lower(User.email) == email).first() if email else None
+        if user:
+            nonce = secrets.token_urlsafe(32)
+            user.password_reset_token_hash = hashlib.sha256(nonce.encode('utf-8')).hexdigest()
+            user.password_reset_sent_at = datetime.utcnow()
+            db.session.commit()
+            token = make_reset_serializer().dumps({'user_id': user.id, 'nonce': nonce})
+            try:
+                send_password_reset_email(user, token)
+            except Exception:
+                app.logger.exception('Could not send password reset email')
+                user.password_reset_token_hash = None
+                user.password_reset_sent_at = None
+                db.session.commit()
+        flash('Если аккаунт с таким email существует, мы отправили инструкцию по восстановлению.', 'info')
+        return redirect(url_for('forgot_password'))
+    return render_template('forgot_password.html')
+
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    user = get_reset_user(token)
+    if not user:
+        flash('Ссылка недействительна или срок её действия истёк. Запросите новую.', 'error')
+        return redirect(url_for('forgot_password'))
+    if request.method == 'POST':
+        validate_csrf()
+        password = request.form.get('password', '')
+        confirmation = request.form.get('password_confirmation', '')
+        if not 10 <= len(password) <= 1024:
+            flash('Пароль должен содержать от 10 до 1024 символов.', 'error')
+        elif password != confirmation:
+            flash('Пароли не совпадают.', 'error')
+        else:
+            user.set_password(password)
+            user.password_reset_token_hash = None
+            user.password_reset_sent_at = None
+            db.session.commit()
+            flash('Пароль обновлён. Теперь войдите с новым паролем.', 'success')
+            return redirect(url_for('login'))
+    return render_template('reset_password.html')
 
 
 @app.route('/logout', methods=['POST'])
@@ -868,7 +975,16 @@ if __name__ == '__main__':
         db.create_all()
         # Безопасная additive-миграция: добавляет только nullable-столбец.
         # Существующие пользователи и данные не удаляются и не перезаписываются.
-        if 'password_hash' not in {column['name'] for column in inspect(db.engine).get_columns('users')}:
-            with db.engine.begin() as connection:
-                connection.exec_driver_sql('ALTER TABLE users ADD COLUMN password_hash VARCHAR(255)')
+        user_columns = {column['name'] for column in inspect(db.engine).get_columns('users')}
+        additive_columns = {
+            'password_hash': 'VARCHAR(255)',
+            'password_reset_token_hash': 'VARCHAR(64)',
+            'password_reset_sent_at': 'DATETIME',
+        }
+        with db.engine.begin() as connection:
+            for column_name, column_type in additive_columns.items():
+                if column_name not in user_columns:
+                    connection.exec_driver_sql(
+                        f'ALTER TABLE users ADD COLUMN {column_name} {column_type}'
+                    )
     app.run(debug=True)
