@@ -418,7 +418,13 @@ def send_password_reset_email(user, token):
     message['Subject'] = 'Восстановление пароля — ФишЭксперт'
     message['From'] = sender
     message['To'] = user.email
-    reset_url = url_for('reset_password', token=token, _external=True)
+    public_base_url = os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')
+    parsed_base_url = urlsplit(public_base_url)
+    if (parsed_base_url.scheme not in ('https', 'http') or not parsed_base_url.netloc
+            or parsed_base_url.username or parsed_base_url.password
+            or (parsed_base_url.scheme == 'http' and parsed_base_url.hostname not in ('localhost', '127.0.0.1'))):
+        raise RuntimeError('PUBLIC_BASE_URL must be a valid HTTPS URL')
+    reset_url = public_base_url + url_for('reset_password', token=token)
     message.set_content(
         'Чтобы задать новый пароль, откройте ссылку (действует 30 минут):\n'
         + reset_url
@@ -466,7 +472,7 @@ def forgot_password():
         validate_csrf()
         email = request.form.get('email', '').strip().lower()
         user = User.query.filter(db.func.lower(User.email) == email).first() if email else None
-        if user:
+        if user and (not user.password_reset_sent_at or (datetime.utcnow() - user.password_reset_sent_at).total_seconds() >= 60):
             nonce = secrets.token_urlsafe(32)
             user.password_reset_token_hash = hashlib.sha256(nonce.encode('utf-8')).hexdigest()
             user.password_reset_sent_at = datetime.utcnow()
