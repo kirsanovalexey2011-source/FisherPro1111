@@ -251,7 +251,7 @@
 
                 {% if current_user.is_authenticated and current_user.id == profile_user.id %}
                 <div>
-                    <a href="#" class="btn-edit">Редактировать</a>
+                    <a href="{{ url_for('edit_profile') }}" class="btn-edit">Редактировать</a>
                 </div>
                 {% endif %}
             </div>
