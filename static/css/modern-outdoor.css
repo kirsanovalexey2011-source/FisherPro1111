@@ -145,3 +145,32 @@ html:not(.dark) input, html:not(.dark) select, html:not(.dark) textarea {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* Compatibility layer for existing page components */
+html.dark [class~="bg-gray-900"], html.dark [class~="bg-gray-950"] {
+  background-color: var(--fe-surface) !important;
+}
+html.dark [class~="bg-gray-800"] { background-color: var(--fe-surface-soft) !important; }
+html.dark [class*="border-gray-"] { border-color: var(--fe-border) !important; }
+html.dark [class~="text-gray-400"], html.dark [class~="text-gray-500"] { color: var(--fe-muted) !important; }
+.glass-card-main, .filter-bar {
+  background: var(--fe-surface) !important;
+  color: var(--fe-text) !important;
+  border: 1px solid var(--fe-border) !important;
+  border-radius: 20px !important;
+  box-shadow: var(--fe-shadow) !important;
+}
+.custom-input, .fish-select-trigger {
+  background: var(--fe-surface-soft) !important;
+  color: var(--fe-text) !important;
+  border: 1px solid var(--fe-border) !important;
+  border-radius: 12px !important;
+}
+.custom-input::placeholder, .fish-select-placeholder { color: var(--fe-muted) !important; }
+.fish-dropdown {
+  background: var(--fe-surface) !important;
+  color: var(--fe-text) !important;
+  border-color: var(--fe-border) !important;
+}
+.form-label-custom { color: var(--fe-accent) !important; }
+.hero-subtitle { color: var(--fe-muted) !important; }
