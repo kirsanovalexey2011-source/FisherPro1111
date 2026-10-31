@@ -1,143 +1,144 @@
 {% extends "base.html" %}
 
+{% block title %}Реестр рыб России — ФишЭксперт{% endblock %}
+
 {% block content %}
-<div class="space-y-8">
-    <div>
-        <h1 class="text-3xl font-bold text-white mb-2">Реестр видов и подвидов рыб России</h1>
-        <p class="text-gray-400">Поиск и фильтрация по семействам, способам ловли и ареалу обитания.</p>
+<section class="fish-catalog space-y-8">
+    <header class="fish-catalog-hero">
+        <div class="fish-catalog-hero-copy">
+            <span class="fe-eyebrow"><i class="fa-solid fa-water"></i> Энциклопедия ФишЭксперт</span>
+            <h1 class="fe-heading">Рыбы России —<br><span>откройте подводный мир</span></h1>
+            <p>Изучайте виды, сравнивайте особенности и находите подходящий способ ловли. Вся полезная информация о рыбах — в одном месте.</p>
+            <a href="#fish-search" class="fe-button"><i class="fa-solid fa-magnifying-glass"></i> Найти рыбу</a>
+        </div>
+        <div class="fish-catalog-hero-art" aria-hidden="true">
+            <div class="fish-art-ring fish-art-ring-one"></div>
+            <div class="fish-art-ring fish-art-ring-two"></div>
+            <i class="fa-solid fa-fish-fins"></i>
+            <span class="fish-art-caption">FISH<br>EXPERT</span>
+        </div>
+        <div class="fish-catalog-hero-bottom">
+            <span><i class="fa-solid fa-book-open"></i> Справочник видов</span>
+            <span><i class="fa-solid fa-sliders"></i> Удобные фильтры</span>
+            <span><i class="fa-solid fa-compass"></i> Поиск по ареалу</span>
+        </div>
+    </header>
+
+    <section id="fish-search" class="fish-search-panel">
+        <div class="fish-search-heading">
+            <div>
+                <span class="fe-eyebrow">Быстрый поиск</span>
+                <h2>Найдите своего трофея</h2>
+                <p>Введите название или отфильтруйте каталог по характеристикам.</p>
+            </div>
+            <span class="fish-search-icon"><i class="fa-solid fa-binoculars"></i></span>
+        </div>
+        <form method="GET" action="{{ url_for('fishes') }}" class="space-y-4">
+            <div class="fish-search-input-wrap">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <input id="fish-search-input" type="search" name="search" value="{{ selected_search or '' }}" placeholder="Например, щука, окунь или латинское название..." aria-label="Поиск рыбы">
+                {% if selected_search %}
+                <a href="{{ url_for('fishes', family=selected_family, method=selected_method, region=selected_region) }}" class="fish-clear-search" aria-label="Очистить поиск"><i class="fa-solid fa-xmark"></i></a>
+                {% endif %}
+            </div>
+            <div class="fish-filter-grid">
+                <label>
+                    <span>Семейство</span>
+                    <select name="family">
+                        <option value="">Все семейства</option>
+                        {% for family in families %}
+                        <option value="{{ family }}" {% if selected_family == family %}selected{% endif %}>{{ family_names.get(family, family) if family_names else family }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>
+                    <span>Способ ловли</span>
+                    <select name="method">
+                        <option value="">Все способы ловли</option>
+                        {% for method in methods %}
+                        <option value="{{ method }}" {% if selected_method == method %}selected{% endif %}>{{ method }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>
+                    <span>Регион обитания</span>
+                    <select name="region">
+                        <option value="">Все регионы</option>
+                        {% for region in regions %}
+                        <option value="{{ region }}" {% if selected_region == region %}selected{% endif %}>{{ region }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+            <div class="fish-filter-actions">
+                <button type="submit" class="fe-button"><i class="fa-solid fa-filter"></i> Применить фильтры</button>
+                <a href="{{ url_for('fishes') }}" class="fe-button-secondary"><i class="fa-solid fa-rotate-left"></i> Сбросить</a>
+            </div>
+        </form>
+    </section>
+
+    <div class="fish-results-heading">
+        <div>
+            <span class="fe-eyebrow">Каталог видов</span>
+            <h2 class="fe-section-title">Обитатели наших вод</h2>
+        </div>
+        {% if pagination %}
+        <span class="fish-results-count">Страница {{ pagination.page }} из {{ pagination.pages }}</span>
+        {% else %}
+        <span class="fish-results-count">{{ fishes|length }} в подборке</span>
+        {% endif %}
     </div>
 
-    <!-- Форма фильтров и поиска -->
-    <form method="GET" action="{{ url_for('fishes') }}" class="bg-gray-900 p-6 rounded-2xl border border-gray-800 space-y-4">
-        <!-- Поиск -->
-        <div class="relative">
-            <input type="text" name="search" value="{{ selected_search or '' }}" placeholder="Поиск по названию или латыни..." class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
-        </div>
-
-        <!-- Селекты фильтров -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <!-- Фильтр Семейство -->
-            <div>
-                <label class="block text-xs text-gray-400 mb-1">Семейство</label>
-                <select name="family" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-sm text-white">
-                    <option value="">Все семейства</option>
-                    {% for family in families %}
-                    <option value="{{ family }}" {% if selected_family == family %}selected{% endif %}>
-                        {{ family_names.get(family, family) if family_names else family }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <!-- Фильтр Способ ловли -->
-            <div>
-                <label class="block text-xs text-gray-400 mb-1">Вид ловли</label>
-                <select name="method" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-sm text-white">
-                    <option value="">Все способы ловли</option>
-                    {% for method in methods %}
-                    <option value="{{ method }}" {% if selected_method == method %}selected{% endif %}>{{ method }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <!-- Фильтр Регион -->
-            <div>
-                <label class="block text-xs text-gray-400 mb-1">Регион обитания</label>
-                <select name="region" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-sm text-white">
-                    <option value="">Все регионы</option>
-                    {% for region in regions %}
-                    <option value="{{ region }}" {% if selected_region == region %}selected{% endif %}>{{ region }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-
-        <div class="flex items-center space-x-3 pt-2">
-            <button type="submit" class="bg-cyan-500 hover:bg-cyan-400 text-gray-950 font-bold px-6 py-2.5 rounded-lg text-sm">Применить</button>
-            <a href="{{ url_for('fishes') }}" class="bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold px-4 py-2.5 rounded-lg text-sm">Сбросить</a>
-        </div>
-    </form>
-
-    <!-- Сетка с карточками рыб -->
     {% if fishes %}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="fish-modern-grid">
         {% for fish in fishes %}
-        <a href="{{ url_for('fish_detail', fish_id=fish.id) }}" class="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 hover:border-cyan-500/50 transition-all duration-300 flex flex-col justify-between group">
-            <div>
-                <!-- Контейнер изображения -->
-                <div class="p-4 bg-white/5 border-b border-gray-800/80">
-                    <div class="w-full h-44 bg-white rounded-xl p-3 flex items-center justify-center overflow-hidden shadow-inner">
-                        {% if fish.image %}
-                            {% if fish.image.startswith('http://') or fish.image.startswith('https://') %}
-                                <img src="{{ fish.image }}"
-                                     alt="{{ fish.name }}"
-                                     loading="lazy"
-                                     onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'flex flex-col items-center justify-center text-gray-400\'><i class=\'fa-solid fa-fish text-4xl mb-1 text-gray-300\'></i><span class=\'text-xs\'>Фото недоступно</span></div>';"
-                                     class="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300">
-                            {% else %}
-                                <img src="{{ url_for('static', filename='images/fishes/' + fish.image) }}"
-                                     alt="{{ fish.name }}"
-                                     onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/' + fish.image) }}';"
-                                     class="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300">
-                            {% endif %}
-                        {% else %}
-                            <div class="flex flex-col items-center justify-center text-gray-400">
-                                <i class="fa-solid fa-fish text-4xl mb-1 text-gray-300"></i>
-                                <span class="text-xs">Фото отсутствует</span>
-                            </div>
-                        {% endif %}
-                    </div>
+        <a href="{{ url_for('fish_detail', fish_id=fish.id) }}" class="fish-modern-card">
+            <div class="fish-modern-image">
+                {% if fish.image %}
+                    {% if fish.image.startswith('http://') or fish.image.startswith('https://') %}
+                    <img src="{{ fish.image }}" alt="{{ fish.name }}" loading="lazy">
+                    {% else %}
+                    <img src="{{ url_for('static', filename='images/fishes/' + fish.image) }}" alt="{{ fish.name }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/' + fish.image) }}';">
+                    {% endif %}
+                {% else %}
+                <div class="fish-image-placeholder"><i class="fa-solid fa-fish-fins"></i><span>Фото скоро появится</span></div>
+                {% endif %}
+                {% if fish.rarity %}<span class="fish-rarity-tag">{{ fish.rarity }}</span>{% endif %}
+                <span class="fish-image-open"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
+            </div>
+            <div class="fish-modern-content">
+                <div class="fish-card-kicker"><span>СПРАВОЧНИК ВИДОВ</span><i class="fa-solid fa-water"></i></div>
+                <h3>{{ fish.name }}</h3>
+                {% if fish.subspecies or fish.latin_name %}<p class="fish-latin-name">{{ fish.subspecies or fish.latin_name }}</p>{% endif %}
+                <p class="fish-modern-description">{{ fish.short_desc or fish.description or 'Откройте карточку, чтобы узнать больше об этом виде.' }}</p>
+                <div class="fish-modern-meta">
+                    {% if fish.family %}<span><i class="fa-solid fa-dna"></i>{{ family_names.get(fish.family, fish.family) if family_names else fish.family }}</span>{% endif %}
+                    {% if fish.habitat_region or fish.category %}<span><i class="fa-solid fa-location-dot"></i>{{ fish.habitat_region or fish.category }}</span>{% endif %}
                 </div>
-
-                <div class="p-5 space-y-3">
-                    <div class="flex justify-between items-start gap-2">
-                        <div>
-                            <h2 class="text-lg font-bold text-white group-hover:text-cyan-400 transition-colors">{{ fish.name }}</h2>
-                            <p class="text-xs text-cyan-400 italic mt-0.5">{{ fish.subspecies or fish.latin_name }}</p>
-                        </div>
-                        {% if fish.rarity %}
-                        <span class="bg-cyan-950 text-cyan-300 border border-cyan-800/60 text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0">{{ fish.rarity }}</span>
-                        {% endif %}
-                    </div>
-
-                    <p class="text-gray-400 text-xs leading-relaxed line-clamp-2">{{ fish.short_desc or fish.description }}</p>
-
-                    <div class="flex flex-wrap gap-1.5 text-[11px] text-gray-400 border-t border-gray-800/80 pt-3">
-                        {% if fish.family %}
-                        <span class="bg-gray-800/80 border border-gray-700/50 px-2 py-0.5 rounded-md">
-                            Сем: {{ family_names.get(fish.family, fish.family) if family_names else fish.family }}
-                        </span>
-                        {% endif %}
-                        {% if fish.habitat_region or fish.category %}
-                        <span class="bg-gray-800/80 border border-gray-700/50 px-2 py-0.5 rounded-md">
-                            Регион: {{ fish.habitat_region or fish.category }}
-                        </span>
-                        {% endif %}
-                    </div>
-                </div>
+                <div class="fish-card-link">Подробнее о виде <i class="fa-solid fa-arrow-right"></i></div>
             </div>
         </a>
         {% endfor %}
     </div>
 
-    <!-- Кнопки пагинации -->
     {% if pagination and pagination.pages > 1 %}
-    <div class="flex justify-center items-center space-x-2 pt-6">
+    <nav class="fish-pagination" aria-label="Страницы каталога">
         {% if pagination.has_prev %}
-        <a href="{{ url_for('fishes', page=pagination.prev_num, search=selected_search, family=selected_family, method=selected_method, region=selected_region) }}" class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition">Назад</a>
+        <a href="{{ url_for('fishes', page=pagination.prev_num, search=selected_search, family=selected_family, method=selected_method, region=selected_region) }}"><i class="fa-solid fa-arrow-left"></i> Назад</a>
         {% endif %}
-        <span class="text-gray-400 text-sm px-4">Страница {{ pagination.page }} из {{ pagination.pages }}</span>
+        <span>Страница <strong>{{ pagination.page }}</strong> из {{ pagination.pages }}</span>
         {% if pagination.has_next %}
-        <a href="{{ url_for('fishes', page=pagination.next_num, search=selected_search, family=selected_family, method=selected_method, region=selected_region) }}" class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition">Вперед</a>
+        <a href="{{ url_for('fishes', page=pagination.next_num, search=selected_search, family=selected_family, method=selected_method, region=selected_region) }}">Далее <i class="fa-solid fa-arrow-right"></i></a>
         {% endif %}
-    </div>
+    </nav>
     {% endif %}
-
     {% else %}
-    <div class="bg-gray-900 p-12 text-center rounded-xl border border-gray-800">
-        <h3 class="text-lg font-bold text-white">Ничего не найдено</h3>
-        <p class="text-gray-400 text-sm mt-1">Попробуйте изменить параметры поиска или сбросить фильтры.</p>
+    <div class="fish-empty-state">
+        <span><i class="fa-solid fa-fish-fins"></i></span>
+        <h3>Пока ничего не найдено</h3>
+        <p>Попробуйте изменить поисковый запрос или сбросить фильтры.</p>
+        <a href="{{ url_for('fishes') }}" class="fe-button">Показать все виды</a>
     </div>
     {% endif %}
-</div>
+</section>
 {% endblock %}
