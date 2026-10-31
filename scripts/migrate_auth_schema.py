@@ -3,6 +3,12 @@
 Run once before starting a WSGI deployment:
     python scripts/migrate_auth_schema.py
 """
+import sys
+from pathlib import Path
+
+# Make the repository root importable when this file is executed by path.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from sqlalchemy import inspect
 
 from app import app, db
