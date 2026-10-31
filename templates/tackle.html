@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-8">
+    <div>
+        <h1 class="text-3xl font-extrabold text-white mb-2">Снасти и Приманки</h1>
+        <p class="text-gray-400 text-sm">Каталог воблеров, блёсен, силикона и оснасток с рекомендациями по проводке.</p>
+    </div>
+
+    <!-- Поиск и Фильтры -->
+    <div class="flex flex-col md:flex-row gap-4 items-center justify-between bg-gray-900 p-4 rounded-xl border border-gray-800">
+        <div class="relative w-full md:w-80">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+            <input type="text" id="searchInput" placeholder="Поиск приманки, рыбы..."
+                   class="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-500 transition placeholder-gray-500">
+        </div>
+
+        <div class="flex flex-wrap md:flex-nowrap gap-3 w-full md:w-auto">
+            <select id="categorySelect" class="bg-gray-800 border border-gray-700 text-gray-300 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-500">
+                <option value="all">Все категории</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}">{{ cat }}</option>
+                {% endfor %}
+            </select>
+
+            <select id="typeSelect" class="bg-gray-800 border border-gray-700 text-gray-300 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-500">
+                <option value="all">Все типы ловли</option>
+                {% for ft in fishing_types %}
+                <option value="{{ ft }}">{{ ft }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- Сетка снастей -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="tackleGrid">
+        {% for item in tackle_list %}
+        <a href="{{ url_for('tackle_detail', tackle_id=item.id) }}"
+           class="tackle-card group block bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-cyan-500 transition duration-200 flex flex-col justify-between"
+           data-title="{{ item.title | lower }}"
+           data-fish="{{ item.target_fish | join(' ') | lower }}"
+           data-category="{{ item.category }}"
+           data-type="{{ item.fishing_type }}">
+            <div>
+                <!-- Изображение -->
+                <div class="w-full aspect-video bg-gray-800 relative overflow-hidden flex items-center justify-center">
+                    {% if item.image %}
+                        {% if item.image.startswith('http://') or item.image.startswith('https://') %}
+                        <img src="{{ item.image }}"
+                             alt="{{ item.title }}"
+                             onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
+                             class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                        {% else %}
+                        <img src="{{ url_for('static', filename='images/tackle/' + item.image) }}"
+                             alt="{{ item.title }}"
+                             onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
+                             class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                        {% endif %}
+
+                        <div class="hidden w-full h-full flex flex-col items-center justify-center text-gray-600 bg-gray-800">
+                            <i class="fa-solid fa-toolbox text-3xl mb-2"></i>
+                            <span class="text-xs">Фото скоро появится</span>
+                        </div>
+                    {% else %}
+                        <div class="w-full h-full flex flex-col items-center justify-center text-gray-600 bg-gray-800">
+                            <i class="fa-solid fa-toolbox text-3xl mb-2"></i>
+                            <span class="text-xs">Фото скоро появится</span>
+                        </div>
+                    {% endif %}
+
+                    <!-- Плашки поверх картинки -->
+                    <div class="absolute top-3 left-3 flex gap-2 z-10">
+                        <span class="bg-gray-950/80 backdrop-blur-md text-cyan-400 border border-cyan-800/60 text-xs font-semibold px-2.5 py-1 rounded-md">
+                            {{ item.category }}
+                        </span>
+                    </div>
+                    <div class="absolute top-3 right-3 z-10">
+                        <span class="bg-gray-950/80 backdrop-blur-md text-yellow-400 border border-yellow-800/60 text-xs font-semibold px-2 py-1 rounded-md">
+                            <i class="fa-solid fa-star mr-1"></i>{{ item.rating }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Контент -->
+                <div class="p-5 space-y-3">
+                    <h3 class="text-lg font-bold text-white leading-snug group-hover:text-cyan-400 transition">{{ item.title }}</h3>
+                    <p class="text-gray-400 text-xs leading-relaxed line-clamp-2">{{ item.description }}</p>
+
+                    <!-- Список хищников -->
+                    <div class="pt-2 flex flex-wrap gap-1.5">
+                        {% for fish in item.target_fish %}
+                        <span class="bg-gray-800 text-gray-300 text-[10px] px-2 py-0.5 rounded border border-gray-700">
+                            {{ fish }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-5 pt-0 flex justify-between items-center text-xs text-cyan-400 font-semibold group-hover:translate-x-1 transition-transform">
+                <span>Подробнее и советы</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('searchInput');
+    const categorySelect = document.getElementById('categorySelect');
+    const typeSelect = document.getElementById('typeSelect');
+    const cards = document.querySelectorAll('.tackle-card');
+
+    function filterData() {
+        const query = searchInput.value.toLowerCase().trim();
+        const selectedCat = categorySelect.value;
+        const selectedType = typeSelect.value;
+
+        cards.forEach(card => {
+            const title = card.dataset.title;
+            const fish = card.dataset.fish;
+            const category = card.dataset.category;
+            const type = card.dataset.type;
+
+            const matchesSearch = title.includes(query) || fish.includes(query);
+            const matchesCat = selectedCat === 'all' || category === selectedCat;
+            const matchesType = selectedType === 'all' || type === selectedType;
+
+            if (matchesSearch && matchesCat && matchesType) {
+                card.classList.remove('hidden');
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+    }
+
+    searchInput.addEventListener('input', filterData);
+    categorySelect.addEventListener('change', filterData);
+    typeSelect.addEventListener('change', filterData);
+});
+</script>
+{% endblock %}

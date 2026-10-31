@@ -1,0 +1,610 @@
+{% extends 'base.html' %}
+{% block title %}Интерактивная карта отчётов — ФишЭксперт{% endblock %}
+
+{% block content %}
+<style>
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-title-container {
+        animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        margin-top: 15px;
+        margin-bottom: 25px;
+        text-align: center;
+    }
+
+    .hero-title {
+        font-size: 2.4rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 50%, #0284c7 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .hero-subtitle {
+        color: #94a3b8;
+        font-size: 1rem;
+        font-weight: 400;
+        max-width: 650px;
+        margin: 10px auto 0 auto;
+        line-height: 1.4;
+    }
+
+    /* Главная карточка */
+    .glass-card-main {
+        background-color: var(--bs-card-bg, #161b22);
+        color: var(--bs-body-color, #f0f6fc);
+        border: 1px solid var(--bs-border-color, rgba(255, 255, 255, 0.1));
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+        padding: 20px;
+    }
+
+    /* Панель фильтров */
+    .filter-bar {
+        background-color: var(--bs-tertiary-bg, #0d1117);
+        border: 1px solid var(--bs-border-color, rgba(255, 255, 255, 0.1));
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .btn-filter-toggle {
+        background-color: var(--bs-body-bg, #161b22);
+        border: 1px solid var(--bs-border-color, #30363d);
+        color: var(--bs-body-color, #f0f6fc);
+        font-weight: 600;
+        border-radius: 8px;
+        padding: 8px 14px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-filter-toggle:hover {
+        border-color: #0ea5e9;
+        color: #0ea5e9;
+    }
+
+    .filter-panel-collapse {
+        display: none;
+        width: 100%;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--bs-border-color, rgba(255, 255, 255, 0.1));
+    }
+
+    .filter-panel-collapse.show {
+        display: block;
+    }
+
+    .form-wrapper {
+        padding: 0 5px;
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 18px;
+    }
+
+    .form-title-blue {
+        font-size: 1.4rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* ЧЁТКИЕ И ЧИТАЕМЫЕ ПОЛЯ ВВОДА */
+    .custom-input {
+        width: 100%;
+        background-color: rgba(0, 0, 0, 0.25) !important;
+        color: #f0f6fc !important;
+        border: 1px solid var(--bs-border-color, #30363d) !important;
+        border-radius: 8px !important;
+        padding: 8px 12px !important;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .custom-input::placeholder {
+        color: #6e7681 !important;
+    }
+
+    .custom-input:focus {
+        outline: none !important;
+        border-color: #0ea5e9 !important;
+        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.25) !important;
+    }
+
+    .form-label-custom {
+        color: #38bdf8;
+        font-size: 0.78rem;
+        font-weight: 700;
+        margin-top: 10px;
+        margin-bottom: 4px;
+        display: block;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Выпадающий список рыб */
+    .fish-select-container {
+        position: relative;
+    }
+
+    .fish-select-trigger {
+        background-color: rgba(0, 0, 0, 0.25);
+        border: 1px solid var(--bs-border-color, #30363d);
+        color: #f0f6fc;
+        border-radius: 8px;
+        padding: 8px 12px;
+        min-height: 40px;
+        cursor: pointer;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .fish-select-placeholder {
+        color: #6e7681;
+        font-size: 0.88rem;
+    }
+
+    .fish-badge {
+        background: #0ea5e9;
+        color: #ffffff;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 4px;
+    }
+
+    .fish-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        margin-top: 4px;
+        background-color: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: none;
+        max-height: 220px;
+        overflow-y: auto;
+        padding: 8px;
+    }
+
+    .fish-dropdown.show {
+        display: block;
+    }
+
+    .fish-search-input {
+        width: 100%;
+        background-color: #0d1117;
+        border: 1px solid #30363d;
+        color: #f0f6fc;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+    }
+
+    .fish-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 8px;
+        color: #f0f6fc;
+        font-size: 0.85rem;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+
+    .fish-option:hover {
+        background-color: #21262d;
+    }
+
+    .fish-option input[type="checkbox"] {
+        accent-color: #0ea5e9;
+        width: 15px;
+        height: 15px;
+    }
+
+    .btn-submit-custom {
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+        color: #ffffff !important;
+        font-weight: 700;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 16px;
+        width: 100%;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        margin-top: 16px;
+    }
+
+    .btn-submit-custom:hover {
+        background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+    }
+
+    .file-upload-box {
+        position: relative;
+        border: 1px dashed #30363d;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+        background-color: rgba(0, 0, 0, 0.25);
+        cursor: pointer;
+    }
+
+    .file-upload-input {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+</style>
+
+<div class="container py-3">
+    <div class="hero-title-container">
+        <h1 class="hero-title m-0">Интерактивная карта уловов</h1>
+        <p class="hero-subtitle">
+            Кликните по карте в месте ловли, чтобы поставить точку и зафиксировать координаты для отчёта.
+        </p>
+    </div>
+
+    <!-- КНОПКА И ПАНЕЛЬ ФИЛЬТРОВ -->
+    <div class="filter-bar">
+        <button class="btn-filter-toggle" id="toggleFilterBtn">
+            ⚙ Фильтры точек
+        </button>
+        <span style="color: #94a3b8; font-size: 0.9rem;" id="filterStatusText">Отображены все отчёты</span>
+
+        <div class="filter-panel-collapse" id="filterPanel">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <label class="form-label-custom" style="margin-top:0;">Фильтр по рыбе</label>
+                    <input type="text" id="filterFish" class="form-control custom-input" placeholder="Название рыбы...">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label-custom" style="margin-top:0;">Поиск по названию / водоёму</label>
+                    <input type="text" id="filterQuery" class="form-control custom-input" placeholder="Ключевое слово...">
+                </div>
+                <div class="col-md-4 d-flex align-items-end gap-2">
+                    <button id="applyFilterBtn" class="btn-submit-custom mt-0" style="padding: 8px 12px;">Применить</button>
+                    <button id="resetFilterBtn" class="btn-filter-toggle mt-0" style="padding: 8px 12px;">Сбросить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ОСНОВНОЙ БЛОК: СЕТКА ДЛЯ КАРТЫ И ФОРМЫ -->
+    <div class="glass-card-main mb-5">
+        <div class="row g-4 align-items-start">
+
+            <!-- Карта -->
+            <div class="col-lg-7">
+                <div id="yandex-map" style="width: 100%; height: 680px; border-radius: 10px; overflow: hidden; border: 1px solid #30363d;"></div>
+            </div>
+
+            <!-- Форма добавления отчёта -->
+            <div class="col-lg-5">
+                <div class="form-wrapper">
+                    <div class="form-header">
+                        <h3 class="form-title-blue m-0">Новый отчёт</h3>
+                    </div>
+
+                    <form action="{{ url_for('add_spot') }}" method="POST" enctype="multipart/form-data">
+
+                        <!-- Водоём -->
+                        <div class="mb-2">
+                            <label class="form-label-custom" style="margin-top: 0;">Заголовок / Водоём</label>
+                            <input type="text" name="title" class="form-control custom-input" placeholder="Например: Река Нева, у Моста" required>
+                        </div>
+
+                        <!-- Выбор рыб с чекбоксами -->
+                        <div class="mb-2">
+                            <label class="form-label-custom">Пойманый вид рыб</label>
+                            <div class="fish-select-container">
+                                <div class="fish-select-trigger" id="fishSelectTrigger">
+                                    <div id="selectedFishBadges" style="display:flex; flex-wrap:wrap; gap:4px;">
+                                        <span class="fish-select-placeholder">Выберите виды рыб...</span>
+                                    </div>
+                                    <small style="color:#6e7681;">▼</small>
+                                </div>
+
+                                <div class="fish-dropdown" id="fishDropdown">
+                                    <input type="text" id="fishSearchInput" class="fish-search-input" placeholder="Поиск рыбы...">
+                                    <div id="fishOptionsList"></div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="fish_species" id="fishSpeciesHiddenInput">
+                        </div>
+
+                        <!-- Координаты -->
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label-custom">Широта (Lat)</label>
+                                <input type="number" step="any" id="lat-input" name="lat" class="form-control custom-input" placeholder="Клик на карте" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label-custom">Долгота (Lon)</label>
+                                <input type="number" step="any" id="lon-input" name="lon" class="form-control custom-input" placeholder="Клик на карте" required>
+                            </div>
+                        </div>
+
+                        <!-- Дата -->
+                        <div class="mb-2">
+                            <label class="form-label-custom">Дата ловли</label>
+                            <input type="date" name="catch_date" class="form-control custom-input">
+                        </div>
+
+                        <!-- Время -->
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label-custom">Начало ловли</label>
+                                <input type="time" name="start_time" class="form-control custom-input">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label-custom">Конец ловли</label>
+                                <input type="time" name="end_time" class="form-control custom-input">
+                            </div>
+                        </div>
+
+                        <!-- Приманка и Снасть -->
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label-custom">Наживка / Приманка</label>
+                                <input type="text" name="bait" class="form-control custom-input" placeholder="Воблер, Мотыль...">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label-custom">Снасть / Оснастка</label>
+                                <input type="text" name="tackle" class="form-control custom-input" placeholder="Спиннинг, Фидер...">
+                            </div>
+                        </div>
+
+                        <!-- Фото -->
+                        <div class="mb-2">
+                            <label class="form-label-custom">Фотографии трофея</label>
+                            <div class="file-upload-box">
+                                <input type="file" name="photos" multiple accept="image/*" class="file-upload-input" id="photo-file-input">
+                                <div style="color: #94a3b8; font-size: 0.82rem;" id="file-label-text">
+                                    Нажмите для выбора фото
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Описание -->
+                        <div class="mb-2">
+                            <label class="form-label-custom">Заметки и детали</label>
+                            <textarea name="info" class="form-control custom-input" rows="3" placeholder="Вес, глубины, условия..." required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn-submit-custom">
+                            Опубликовать метку
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://api-maps.yandex.ru/2.1/?apikey={{ yandex_api_key or '' }}&lang=ru_RU" type="text/javascript"></script>
+
+<script type="text/javascript">
+    var rawSpeciesList = {{ (species_list or []) | tojson }};
+    var reports = {{ (reports or []) | tojson }};
+
+    var cleanSpeciesSet = new Set();
+    rawSpeciesList.forEach(function(item) {
+        if (typeof item === 'string') {
+            item.split(',').forEach(function(s) {
+                var trimmed = s.trim();
+                if (trimmed) cleanSpeciesSet.add(trimmed);
+            });
+        }
+    });
+    if (cleanSpeciesSet.size === 0) {
+        ['Щука', 'Окунь', 'Судак', 'Лещ', 'Карась', 'Плотва', 'Голавль', 'Язь', 'Жерех', 'Корюшка'].forEach(s => cleanSpeciesSet.add(s));
+    }
+
+    var speciesArray = Array.from(cleanSpeciesSet).sort();
+    var selectedSpecies = [];
+    var myMap, geoObjectsGroup;
+
+    document.getElementById('toggleFilterBtn').addEventListener('click', function() {
+        document.getElementById('filterPanel').classList.toggle('show');
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        var trigger = document.getElementById('fishSelectTrigger');
+        var dropdown = document.getElementById('fishDropdown');
+        var searchInput = document.getElementById('fishSearchInput');
+        var optionsList = document.getElementById('fishOptionsList');
+        var badgesContainer = document.getElementById('selectedFishBadges');
+        var hiddenInput = document.getElementById('fishSpeciesHiddenInput');
+
+        function renderOptions(filter = '') {
+            optionsList.innerHTML = '';
+            speciesArray.forEach(function(fish) {
+                if (filter && !fish.toLowerCase().includes(filter.toLowerCase())) return;
+
+                var isChecked = selectedSpecies.includes(fish);
+                var label = document.createElement('label');
+                label.className = 'fish-option';
+                label.innerHTML = `
+                    <input type="checkbox" value="${fish}" ${isChecked ? 'checked' : ''}>
+                    <span>${fish}</span>
+                `;
+
+                label.querySelector('input').addEventListener('change', function() {
+                    if (this.checked) {
+                        if (!selectedSpecies.includes(fish)) selectedSpecies.push(fish);
+                    } else {
+                        selectedSpecies = selectedSpecies.filter(s => s !== fish);
+                    }
+                    updateBadges();
+                });
+
+                optionsList.appendChild(label);
+            });
+        }
+
+        function updateBadges() {
+            badgesContainer.innerHTML = '';
+            if (selectedSpecies.length === 0) {
+                badgesContainer.innerHTML = '<span class="fish-select-placeholder">Выберите виды рыб...</span>';
+            } else {
+                selectedSpecies.forEach(function(fish) {
+                    var badge = document.createElement('span');
+                    badge.className = 'fish-badge';
+                    badge.innerHTML = `${fish}`;
+                    badgesContainer.appendChild(badge);
+                });
+            }
+            hiddenInput.value = selectedSpecies.join(', ');
+        }
+
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('show');
+        });
+
+        searchInput.addEventListener('input', function() {
+            renderOptions(this.value);
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!trigger.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        renderOptions();
+    });
+
+    ymaps.ready(init);
+
+    function init() {
+        // Ставим гибридную/спутниковую тему для карты, чтобы смотрелась органично
+        myMap = new ymaps.Map("yandex-map", {
+            center: [59.9343, 30.3351],
+            zoom: 8,
+            type: 'yandex#map',
+            controls: ['zoomControl', 'typeSelector', 'fullscreenControl']
+        });
+
+        geoObjectsGroup = new ymaps.GeoObjectCollection();
+        myMap.geoObjects.add(geoObjectsGroup);
+
+        renderMapMarkers(reports);
+
+        var tempPlacemark = null;
+
+        myMap.events.add('click', function (e) {
+            var coords = e.get('coords');
+            var lat = coords[0].toFixed(5);
+            var lon = coords[1].toFixed(5);
+
+            document.getElementById('lat-input').value = lat;
+            document.getElementById('lon-input').value = lon;
+
+            if (tempPlacemark) {
+                tempPlacemark.geometry.setCoordinates(coords);
+            } else {
+                tempPlacemark = new ymaps.Placemark(coords, {
+                    iconCaption: 'Новая точка'
+                }, {
+                    preset: 'islands#blueDotIconWithCaption',
+                    draggable: true
+                });
+
+                tempPlacemark.events.add('dragend', function () {
+                    var newCoords = tempPlacemark.geometry.getCoordinates();
+                    document.getElementById('lat-input').value = newCoords[0].toFixed(5);
+                    document.getElementById('lon-input').value = newCoords[1].toFixed(5);
+                });
+
+                myMap.geoObjects.add(tempPlacemark);
+            }
+        });
+
+        function applyMapFilters() {
+            var fishVal = document.getElementById('filterFish').value.toLowerCase().trim();
+            var qVal = document.getElementById('filterQuery').value.toLowerCase().trim();
+
+            var filtered = reports.filter(function(r) {
+                var matchFish = !fishVal || (r.fish_species && r.fish_species.toLowerCase().includes(fishVal));
+                var matchQuery = !qVal || (
+                    (r.title && r.title.toLowerCase().includes(qVal)) ||
+                    (r.info && r.info.toLowerCase().includes(qVal))
+                );
+                return matchFish && matchQuery;
+            });
+
+            renderMapMarkers(filtered);
+            document.getElementById('filterStatusText').textContent = `Показано меток: ${filtered.length} из ${reports.length}`;
+        }
+
+        document.getElementById('applyFilterBtn').addEventListener('click', applyMapFilters);
+        document.getElementById('resetFilterBtn').addEventListener('click', function() {
+            document.getElementById('filterFish').value = '';
+            document.getElementById('filterQuery').value = '';
+            renderMapMarkers(reports);
+            document.getElementById('filterStatusText').textContent = 'Отображены все отчёты';
+        });
+    }
+
+    function renderMapMarkers(dataList) {
+        geoObjectsGroup.removeAll();
+        dataList.forEach(function(report) {
+            var placemark = new ymaps.Placemark([report.lat, report.lon], {
+                balloonContentHeader: `<div style="font-weight:700; color:#0f172a;">${report.title}</div>`,
+                balloonContentBody: `<div style="color:#334155;">${report.info}<br><b>Вид:</b> ${report.fish_species || 'Не указан'}<br><a href="/spot/${report.id}" style="color:#0ea5e9;">Открыть отчёт &rarr;</a></div>`,
+                hintContent: report.title
+            }, {
+                preset: 'islands#redFishingIcon'
+            });
+            geoObjectsGroup.add(placemark);
+        });
+    }
+
+    var fileInput = document.getElementById('photo-file-input');
+    var fileLabelText = document.getElementById('file-label-text');
+    if (fileInput && fileLabelText) {
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                fileLabelText.textContent = `Выбрано файлов: ${this.files.length}`;
+                fileLabelText.style.color = '#38bdf8';
+            } else {
+                fileLabelText.textContent = 'Нажмите для выбора фото';
+                fileLabelText.style.color = '#94a3b8';
+            }
+        });
+    }
+</script>
+{% endblock %}

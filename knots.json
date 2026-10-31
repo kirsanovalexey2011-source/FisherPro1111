@@ -1,0 +1,56 @@
+[
+  {
+    "id": "palomar",
+    "name": "Паломар (Palomar)",
+    "difficulty": "Легкий",
+    "methods": ["Спиннинг", "Фидер", "Поплавок"],
+    "description": "Один из самых надежных и простых узлов для привязывания крючков, вертлюгов и приманок к плетёному шнуру.",
+    "strength": "95%",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/d4/Kletter_gelegter_und_gesteckter_sackstich.jpg?utm_source=ru.wikipedia.org&utm_campaign=index&utm_content=original"
+  },
+  {
+    "id": "clinch",
+    "name": "Клинч улучшенный (Improved Clinch)",
+    "difficulty": "Легкий",
+    "methods": ["Спиннинг", "Поплавок", "Налыст"],
+    "description": "Классический узел для монофила и флюорокарбона. Идеален для мелких и средних крючков и блесен.",
+    "strength": "90%",
+    "image": null
+  },
+  {
+    "id": "fg-knot",
+    "name": "FG Knot",
+    "difficulty": "Сложный",
+    "methods": ["Спиннинг", "Морская ловля", "Джиг"],
+    "description": "Самый тонкий и прочный узел для связывания плетёного шнура с поводом из флюорокарбона. Легко проходит через кольца удилища.",
+    "strength": "100%",
+    "image": null
+  },
+  {
+    "id": "albright",
+    "name": "Олбрайт (Albright)",
+    "difficulty": "Средний",
+    "methods": ["Спиннинг", "Фидер", "Карпфишинг"],
+    "description": "Отлично подходит для соединения лесок разного диаметра (например, основного шнура и шок-лидера).",
+    "strength": "88%",
+    "image": null
+  },
+  {
+    "id": "blood-knot",
+    "name": "Кровавый узел (Blood Knot)",
+    "difficulty": "Средний",
+    "methods": ["Нахлыст", "Поплавок"],
+    "description": "Используется для связывания двух лесок примерно одинакового диаметра.",
+    "strength": "85%",
+    "image": null
+  },
+  {
+    "id": "snell-knot",
+    "name": "Крючковый / Безузловой (Snell Knot)",
+    "difficulty": "Легкий",
+    "methods": ["Фидер", "Поплавок", "Карпфишинг"],
+    "description": "Надежное привязывание крючков с лопаточкой или колечком прямо за цевье.",
+    "strength": "92%",
+    "image": null
+  }
+]

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-12">
+    <!-- Главный промо-баннер -->
+    <div class="relative rounded-2xl overflow-hidden bg-gradient-to-r from-cyan-900 to-gray-900 border border-gray-800 p-8 md:p-16 flex flex-col items-start justify-center shadow-xl">
+        <span class="bg-cyan-500/20 text-cyan-300 text-xs font-semibold px-3 py-1 rounded-full border border-cyan-500/30 mb-4">Интерактивный справочник</span>
+        <h1 class="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-4">Всё о рыбалке в России</h1>
+        <p class="text-gray-300 text-lg max-w-2xl mb-8 leading-relaxed">Подробные карточки видов рыб, точки ловли на интерактивной карте, разборы приманок, узлы и рецепты блюд на одном портале.</p>
+        <a href="{{ url_for('fishes') }}" class="bg-cyan-500 hover:bg-cyan-400 text-gray-950 font-bold px-6 py-3 rounded-lg transition duration-200">Перейти в каталог рыб</a>
+    </div>
+
+    <!-- Быстрая навигация по разделам (6 блоков) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- 1. Каталог рыб -->
+        <a href="{{ url_for('fishes') }}" class="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-cyan-500 transition duration-300 group shadow-lg hover:-translate-y-1">
+            <i class="fa-solid fa-fish text-3xl text-cyan-400 mb-3 group-hover:scale-110 transition-transform duration-300 block"></i>
+            <h3 class="text-xl font-bold text-white mb-1 group-hover:text-cyan-400 transition">Каталог Рыб</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Сложность поимки, места обитания, наживки и характеристики.</p>
+        </a>
+
+        <!-- 2. Карта отчётов -->
+        <a href="{{ url_for('map_page') }}" class="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-cyan-500 transition duration-300 group shadow-lg hover:-translate-y-1">
+            <i class="fa-solid fa-map-location-dot text-3xl text-cyan-400 mb-3 group-hover:scale-110 transition-transform duration-300 block"></i>
+            <h3 class="text-xl font-bold text-white mb-1 group-hover:text-cyan-400 transition">Карта Отчётов</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Отметки о поимках с подробностями от реальных рыбаков.</p>
+        </a>
+
+        <!-- 3. Снасти и Приманки -->
+        <a href="{{ url_for('tackle') }}" class="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-cyan-500 transition duration-300 group shadow-lg hover:-translate-y-1">
+            <i class="fa-solid fa-toolbox text-3xl text-cyan-400 mb-3 group-hover:scale-110 transition-transform duration-300 block"></i>
+            <h3 class="text-xl font-bold text-white mb-1 group-hover:text-cyan-400 transition">Снасти и Приманки</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Разбор воблеров, силикона, спиннингов и оснасток.</p>
+        </a>
+
+        <!-- 4. Каталог Водоёмов -->
+        <a href="{{ url_for('waters') }}" class="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-cyan-500 transition duration-300 group shadow-lg hover:-translate-y-1">
+            <i class="fa-solid fa-water text-3xl text-cyan-400 mb-3 group-hover:scale-110 transition-transform duration-300 block"></i>
+            <h3 class="text-xl font-bold text-white mb-1 group-hover:text-cyan-400 transition">Каталог Водоёмов</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Реки, озёра и пруды с геолокацией, глубинами и видами рыб.</p>
+        </a>
+
+        <!-- 5. Рыболовные Узлы -->
+        <a href="{{ url_for('knots') }}" class="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-cyan-500 transition duration-300 group shadow-lg hover:-translate-y-1">
+            <i class="fa-solid fa-gears text-3xl text-cyan-400 mb-3 group-hover:scale-110 transition-transform duration-300 block"></i>
+            <h3 class="text-xl font-bold text-white mb-1 group-hover:text-cyan-400 transition">Рыболовные Узлы</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Пошаговые схемы вязки узлов для крючков, лески и плетёнки.</p>
+        </a>
+
+        <!-- 6. Рыболовная Кухня -->
+        <a href="{{ url_for('recipes') }}" class="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-cyan-500 transition duration-300 group shadow-lg hover:-translate-y-1">
+            <i class="fa-solid fa-utensils text-3xl text-cyan-400 mb-3 group-hover:scale-110 transition-transform duration-300 block"></i>
+            <h3 class="text-xl font-bold text-white mb-1 group-hover:text-cyan-400 transition">Рыболовная Кухня</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Проверенные рецепты ухи, запекания и копчения улова.</p>
+        </a>
+
+    </div>
+</div>
+{% endblock %}

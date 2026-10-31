@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Кнопка Назад -->
+    <a href="{{ url_for('knots') }}" class="inline-flex items-center text-sm text-cyan-400 hover:text-cyan-300 transition">
+        <i class="fa-solid fa-arrow-left mr-2"></i> Вернуться к узлам
+    </a>
+
+    <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden space-y-6">
+        <!-- Фото / Схема узла -->
+        <div class="relative h-64 md:h-80 w-full bg-gray-800/80 flex items-center justify-center border-b border-gray-800 p-6">
+            {% if knot.image %}
+                {% if knot.image.startswith('http://') or knot.image.startswith('https://') or knot.image.startswith('data:image/') %}
+                <img src="{{ knot.image }}"
+                     alt="{{ knot.name }}"
+                     onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
+                     class="h-full object-contain">
+                {% else %}
+                <img src="{{ url_for('static', filename='images/knots/' + knot.image) }}"
+                     alt="{{ knot.name }}"
+                     onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
+                     class="h-full object-contain">
+                {% endif %}
+
+                <div class="hidden flex flex-col items-center text-gray-600">
+                    <i class="fa-solid fa-gear text-6xl mb-3"></i>
+                    <span class="text-sm">Схема узла скоро появится</span>
+                </div>
+            {% else %}
+                <div class="flex flex-col items-center text-gray-600">
+                    <i class="fa-solid fa-gear text-6xl mb-3"></i>
+                    <span class="text-sm">Схема узла скоро появится</span>
+                </div>
+            {% endif %}
+
+            {% if knot.difficulty %}
+            <span class="absolute top-4 right-4 bg-gray-900/90
+                {% if knot.difficulty == 'Легкий' %}text-green-400 border-green-800/50
+                {% elif knot.difficulty == 'Средний' %}text-yellow-400 border-yellow-800/50
+                {% else %}text-red-400 border-red-800/50{% endif %}
+                border text-xs font-semibold px-3 py-1.5 rounded-lg backdrop-blur-sm">
+                {{ knot.difficulty }}
+            </span>
+            {% endif %}
+        </div>
+
+        <!-- Информация -->
+        <div class="p-6 md:p-8 space-y-6 pt-0">
+            <div class="border-b border-gray-800 pb-4 flex justify-between items-end">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-white mb-2">{{ knot.name }}</h1>
+                    {% if knot.strength %}
+                    <p class="text-gray-400 text-sm">Прочность: <span class="text-green-400 font-bold">{{ knot.strength }}</span></p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if knot.description %}
+            <div class="space-y-2">
+                <h3 class="text-lg font-bold text-white">Описание и применение</h3>
+                <p class="text-gray-300 text-sm leading-relaxed">{{ knot.description }}</p>
+            </div>
+            {% endif %}
+
+            {% if knot.instructions %}
+            <div class="space-y-2 pt-4 border-t border-gray-800">
+                <h3 class="text-lg font-bold text-white">Инструкция по вязанию</h3>
+                <p class="text-gray-300 text-sm leading-relaxed whitespace-pre-line">{{ knot.instructions }}</p>
+            </div>
+            {% endif %}
+
+            {% if knot.methods %}
+            <div class="space-y-3 pt-4 border-t border-gray-800">
+                <h3 class="text-lg font-bold text-white">Подходит для видов ловли</h3>
+                <div class="flex flex-wrap gap-2">
+                    {% for m in knot.methods %}
+                    <span class="bg-gray-800 text-cyan-300 text-xs px-3 py-1.5 rounded-lg border border-gray-700">
+                        <i class="fa-solid fa-fish mr-1.5 text-cyan-500"></i>{{ m }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

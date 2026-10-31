@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block title %}Вести с водоёмов и отчёты — ФишЭксперт{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <h1 class="text-3xl font-extrabold text-white tracking-tight">Вести с водоёмов и отчёты</h1>
+        <p class="text-gray-400 mt-1">Свежие вести с рыбалки, отчёты об уловах и наблюдения рыболовов.</p>
+    </div>
+    {% if pagination %}
+    <div class="text-sm text-gray-400 bg-gray-900 px-4 py-2 rounded-lg border border-gray-800 self-start md:self-auto">
+        Всего отчётов: <span class="font-bold text-cyan-400">{{ pagination.total }}</span>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Панель поиска и фильтров -->
+<form method="GET" action="{{ url_for('spots') }}" class="mb-8 bg-gray-900 border border-gray-800 rounded-2xl p-4 md:p-6 shadow-xl">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+
+        <!-- Поисковая строка -->
+        <div class="lg:col-span-2">
+            <label class="block text-xs font-medium text-gray-400 mb-1">Поиск по отчётам</label>
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                <input type="text" name="search" value="{{ selected_search or '' }}" placeholder="Название, текст или водоём..."
+                       class="w-full pl-9 pr-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition">
+            </div>
+        </div>
+
+        <!-- Фильтр по рыбе -->
+        <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Пойманная рыба</label>
+            <select name="fish" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-200 focus:outline-none focus:border-cyan-500 transition">
+                <option value="">Все рыбы</option>
+                {% for f in fishes_list %}
+                    <option value="{{ f }}" {% if selected_fish == f %}selected{% endif %}>{{ f }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Фильтр по месту -->
+        <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Место / Водоём</label>
+            <select name="place" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-200 focus:outline-none focus:border-cyan-500 transition">
+                <option value="">Все места</option>
+                {% for p in places_list %}
+                    <option value="{{ p }}" {% if selected_place == p %}selected{% endif %}>{{ p }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Сортировка -->
+        <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Сортировка</label>
+            <select name="sort" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-200 focus:outline-none focus:border-cyan-500 transition">
+                <option value="newest" {% if sort_order == 'newest' %}selected{% endif %}>Сначала новые</option>
+                <option value="oldest" {% if sort_order == 'oldest' %}selected{% endif %}>Сначала старые</option>
+            </select>
+        </div>
+
+    </div>
+
+    <!-- Кнопки действий -->
+    <div class="mt-4 flex justify-end gap-3 pt-3 border-t border-gray-800/60">
+        <a href="{{ url_for('spots') }}" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded-xl transition">
+            <i class="fa-solid fa-rotate-left mr-1"></i> Сбросить
+        </a>
+        <button type="submit" class="px-5 py-2 bg-cyan-500 hover:bg-cyan-400 text-gray-950 text-sm font-bold rounded-xl transition">
+            <i class="fa-solid fa-filter mr-1"></i> Применить
+        </button>
+    </div>
+</form>
+
+<!-- Сетка карточек отчетов -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    {% for spot in spots %}
+    {% set cover = spot.cover_image or spot.image %}
+    <div class="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden hover:border-cyan-500/50 transition-all duration-300 flex flex-col shadow-xl">
+
+        <!-- Обложка отчета (ровно 1 фото или заглушка) -->
+        <div class="w-full h-72 bg-gray-950 relative overflow-hidden flex items-center justify-center border-b border-gray-800/80">
+            {% if cover %}
+                <!-- Размытый задний фон -->
+                <img src="{{ cover }}" alt="{{ spot.title or spot.name }}" class="absolute inset-0 w-full h-full object-cover opacity-20 blur-md scale-110">
+                <!-- Основное изображение целиком -->
+                <img src="{{ cover }}" alt="{{ spot.title or spot.name }}" class="relative max-h-full w-full object-contain z-10 p-1">
+            {% else %}
+                <div class="flex flex-col items-center justify-center text-gray-600">
+                    <i class="fa-solid fa-fish-fins text-4xl mb-2 text-cyan-500/50"></i>
+                    <span class="text-xs text-gray-500">Нет фотографии</span>
+                </div>
+            {% endif %}
+
+            <!-- Бейдж места/водоема -->
+            <div class="absolute top-3 left-3 z-20">
+                <span class="bg-gray-950/80 backdrop-blur-md text-cyan-400 text-xs px-3 py-1.5 rounded-full border border-cyan-500/30 font-medium">
+                    <i class="fa-solid fa-location-dot mr-1"></i>{{ spot.location or spot.place or spot.waterbody or 'Водоём' }}
+                </span>
+            </div>
+
+            <!-- Счетчик количества фото -->
+            {% if spot.images and spot.images|length > 1 %}
+            <div class="absolute bottom-3 right-3 z-20">
+                <span class="bg-gray-950/90 backdrop-blur-md text-gray-300 text-xs px-2.5 py-1 rounded-lg border border-gray-800 font-medium flex items-center gap-1">
+                    <i class="fa-solid fa-images text-cyan-400"></i> {{ spot.images|length }}
+                </span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Контент карточки -->
+        <div class="p-6 flex flex-col flex-grow justify-between">
+            <div>
+                <h2 class="text-xl font-bold text-white mb-3 line-clamp-2 leading-snug hover:text-cyan-400 transition">
+                    <a href="{{ url_for('spot_detail', spot_id=spot.id) }}">{{ spot.title or spot.name }}</a>
+                </h2>
+                <p class="text-gray-400 text-sm line-clamp-3 leading-relaxed mb-4">
+                    {{ spot.description or spot.content or spot.text }}
+                </p>
+            </div>
+
+            <div class="pt-4 border-t border-gray-800/60 flex items-center justify-between mt-auto">
+                <span class="text-xs text-gray-500 flex items-center">
+                    <i class="fa-solid fa-fish mr-1.5 text-cyan-400"></i>{{ spot.fish_caught or spot.fish or 'Не указана' }}
+                </span>
+                <a href="{{ url_for('spot_detail', spot_id=spot.id) }}" class="inline-flex items-center text-sm font-semibold text-cyan-400 hover:text-cyan-300 transition group">
+                    Читать дальше
+                    <i class="fa-solid fa-arrow-right ml-1.5 text-xs group-hover:translate-x-1 transition-transform"></i>
+                </a>
+            </div>
+        </div>
+
+    </div>
+    {% else %}
+    <div class="col-span-full bg-gray-900 border border-gray-800 rounded-2xl p-12 text-center text-gray-400">
+        <i class="fa-solid fa-box-open text-5xl mb-4 text-gray-600"></i>
+        <p class="text-lg font-medium text-white mb-1">Отчёты по вашему запросу не найдены</p>
+        <p class="text-sm text-gray-500 mb-4">Попробуйте изменить параметры поиска или сбросить фильтры.</p>
+        <a href="{{ url_for('spots') }}" class="inline-flex items-center px-4 py-2 bg-cyan-500 text-gray-950 font-bold rounded-xl text-sm hover:bg-cyan-400 transition">
+            Сбросить фильтры
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Блок пагинации -->
+{% if pagination and pagination.pages > 1 %}
+<div class="mt-12 flex justify-center items-center space-x-2">
+    <!-- Кнопка Назад -->
+    {% if pagination.has_prev %}
+        <a href="{{ url_for('spots', page=pagination.prev_num, search=selected_search, fish=selected_fish, place=selected_place, tackle=selected_tackle, sort=sort_order) }}"
+           class="px-4 py-2 bg-gray-900 border border-gray-800 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
+            <i class="fa-solid fa-chevron-left mr-1"></i> Назад
+        </a>
+    {% else %}
+        <span class="px-4 py-2 bg-gray-950 border border-gray-900 rounded-lg text-sm text-gray-600 cursor-not-allowed">
+            <i class="fa-solid fa-chevron-left mr-1"></i> Назад
+        </span>
+    {% endif %}
+
+    <!-- Номера страниц -->
+    <div class="flex items-center space-x-1 px-2">
+        {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if p %}
+                {% if p == pagination.page %}
+                    <span class="px-3.5 py-2 bg-cyan-500 text-gray-950 font-bold rounded-lg text-sm">
+                        {{ p }}
+                    </span>
+                {% else %}
+                    <a href="{{ url_for('spots', page=p, search=selected_search, fish=selected_fish, place=selected_place, tackle=selected_tackle, sort=sort_order) }}"
+                       class="px-3.5 py-2 bg-gray-900 border border-gray-800 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                        {{ p }}
+                    </a>
+                {% endif %}
+            {% else %}
+                <span class="px-2 py-2 text-gray-600">…</span>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Кнопка Вперед -->
+    {% if pagination.has_next %}
+        <a href="{{ url_for('spots', page=pagination.next_num, search=selected_search, fish=selected_fish, place=selected_place, tackle=selected_tackle, sort=sort_order) }}"
+           class="px-4 py-2 bg-gray-900 border border-gray-800 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
+            Вперёд <i class="fa-solid fa-chevron-right ml-1"></i>
+        </a>
+    {% else %}
+        <span class="px-4 py-2 bg-gray-950 border border-gray-900 rounded-lg text-sm text-gray-600 cursor-not-allowed">
+            Вперёд <i class="fa-solid fa-chevron-right ml-1"></i>
+        </span>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

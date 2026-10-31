@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Кнопка возврата -->
+    <div>
+        <a href="{{ url_for('recipes') }}"
+           class="inline-flex items-center gap-2 text-xs font-semibold text-cyan-400 hover:text-cyan-300 bg-gray-900 border border-gray-800 hover:border-cyan-500/50 px-4 py-2 rounded-xl transition duration-200">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Вернуться к рецептам</span>
+        </a>
+    </div>
+
+    <!-- Главная карточка рецепта -->
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+
+        <!-- Изображение блюда (Пропорциональное 16:9) -->
+        <div class="relative w-full aspect-video bg-gray-800 overflow-hidden border-b border-gray-800 flex items-center justify-center">
+            {% if recipe.image %}
+                {% if recipe.image.startswith('http://') or recipe.image.startswith('https://') %}
+                <img src="{{ recipe.image }}"
+                     alt="{{ recipe.title }}"
+                     onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
+                     class="w-full h-full object-cover">
+                {% else %}
+                <img src="{{ url_for('static', filename='images/recipes/' + recipe.image) }}"
+                     alt="{{ recipe.title }}"
+                     onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
+                     class="w-full h-full object-cover">
+                {% endif %}
+
+                <!-- Заглушка, если файл не найден -->
+                <div class="hidden w-full h-full flex flex-col items-center justify-center text-gray-600 bg-gray-800">
+                    <i class="fa-solid fa-utensils text-5xl mb-3"></i>
+                    <span class="text-sm">Фотография блюда готовится</span>
+                </div>
+            {% else %}
+                <!-- Заглушка, если поле image отсутствует -->
+                <div class="w-full h-full flex flex-col items-center justify-center text-gray-600 bg-gray-800">
+                    <i class="fa-solid fa-utensils text-5xl mb-3"></i>
+                    <span class="text-sm">Фотография блюда готовится</span>
+                </div>
+            {% endif %}
+
+            <!-- Бейджи поверх картинки -->
+            <div class="absolute top-4 right-4 flex gap-2 z-10">
+                <span class="bg-gray-900/90 text-cyan-400 border border-cyan-800/60 text-xs font-semibold px-3 py-1.5 rounded-lg backdrop-blur-sm shadow-md">
+                    <i class="fa-solid fa-fish mr-1.5"></i>{{ recipe.fish_type }}
+                </span>
+                <span class="bg-gray-900/90 text-gray-300 border border-gray-700 text-xs px-3 py-1.5 rounded-lg backdrop-blur-sm shadow-md">
+                    <i class="fa-solid fa-fire mr-1.5"></i>{{ recipe.cooking_method }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Шапка и мета-информация -->
+        <div class="p-6 md:p-8 space-y-6">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold text-white mb-3 leading-snug">
+                    {{ recipe.title }}
+                </h1>
+
+                <!-- Характеристики -->
+                <div class="flex flex-wrap items-center gap-4 text-xs md:text-sm text-gray-400 pt-2 border-t border-gray-800/80">
+                    <div class="flex items-center gap-1.5">
+                        <i class="fa-regular fa-clock text-cyan-400"></i>
+                        <span>Время: <strong class="text-gray-200">{{ recipe.time }}</strong></span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-users text-cyan-400"></i>
+                        <span>Порций: <strong class="text-gray-200">{{ recipe.servings }}</strong></span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-layer-group text-cyan-400"></i>
+                        <span>Сложность:
+                            <strong class="{% if recipe.difficulty == 'Легко' %}text-green-400{% elif recipe.difficulty == 'Средне' %}text-yellow-400{% else %}text-red-400{% endif %}">
+                                {{ recipe.difficulty }}
+                            </strong>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Описание -->
+            {% if recipe.description %}
+            <div class="bg-gray-800/50 border border-gray-800 p-4 rounded-xl">
+                <p class="text-gray-300 text-sm leading-relaxed">
+                    {{ recipe.description }}
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- Сетка: Ингредиенты + Шаги -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-2">
+
+                <!-- Левая колонка: Ингредиенты (5 колонок) -->
+                {% if recipe.ingredients %}
+                <div class="lg:col-span-5 space-y-4">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2 border-b border-gray-800 pb-3">
+                        <i class="fa-solid fa-basket-shopping text-cyan-400"></i>
+                        Ингредиенты
+                    </h2>
+                    {% if recipe.ingredients is iterable and recipe.ingredients is not string %}
+                    <ul class="space-y-2.5">
+                        {% for ingredient in recipe.ingredients %}
+                        <li class="flex items-start gap-2.5 text-xs md:text-sm text-gray-300 bg-gray-800/30 p-2.5 rounded-lg border border-gray-800/60">
+                            <i class="fa-solid fa-check text-cyan-400 text-xs mt-1 shrink-0"></i>
+                            <span>{{ ingredient }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-xs md:text-sm text-gray-300 leading-relaxed bg-gray-800/30 p-3 rounded-lg border border-gray-800/60 whitespace-pre-line">
+                        {{ recipe.ingredients }}
+                    </p>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Правая колонка: Пошаговый рецепт (7 колонок) -->
+                {% set steps_data = recipe.steps or recipe.instructions or recipe.preparation %}
+                {% if steps_data %}
+                <div class="{% if recipe.ingredients %}lg:col-span-7{% else %}lg:col-span-12{% endif %} space-y-4">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2 border-b border-gray-800 pb-3">
+                        <i class="fa-solid fa-list-ol text-cyan-400"></i>
+                        Приготовление
+                    </h2>
+                    {% if steps_data is iterable and steps_data is not string %}
+                    <ol class="space-y-4">
+                        {% for step in steps_data %}
+                        <li class="flex items-start gap-3 bg-gray-800/20 p-3.5 rounded-xl border border-gray-800">
+                            <span class="w-6 h-6 rounded-lg bg-cyan-950 text-cyan-400 border border-cyan-800/80 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                                {{ loop.index }}
+                            </span>
+                            <p class="text-xs md:text-sm text-gray-300 leading-relaxed">
+                                {{ step }}
+                            </p>
+                        </li>
+                        {% endfor %}
+                    </ol>
+                    {% else %}
+                    <div class="bg-gray-800/20 p-4 rounded-xl border border-gray-800 text-xs md:text-sm text-gray-300 leading-relaxed whitespace-pre-line">
+                        {{ steps_data }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

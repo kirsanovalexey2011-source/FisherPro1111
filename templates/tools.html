@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Инструменты рыболова — ФишЭксперт{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <h1 class="text-3xl font-bold text-cyan-500 dark:text-cyan-400">Инструменты рыболова</h1>
+
+    <!-- Калькулятор прогноза клёва -->
+    <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-cloud-sun-rain text-cyan-400"></i> Экспресс-расчёт вероятности клёва
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+                <label class="block text-sm mb-1">Температура воздуха (°C)</label>
+                <input type="number" id="temp" value="18" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2">
+            </div>
+            <div>
+                <label class="block text-sm mb-1">Атмосферное давление (мм рт. ст.)</label>
+                <input type="number" id="pressure" value="745" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2">
+            </div>
+            <div>
+                <label class="block text-sm mb-1">Ветер (м/с)</label>
+                <input type="number" id="wind" value="3" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2">
+            </div>
+        </div>
+        <button onclick="calculateBite()" class="bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg font-medium transition">
+            Рассчитать прогноз
+        </button>
+
+        <div id="bite-result" class="mt-4 hidden p-4 rounded-lg bg-gray-100 dark:bg-gray-800">
+            <div class="font-bold text-lg" id="bite-score"></div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1" id="bite-desc"></p>
+        </div>
+    </div>
+
+    <!-- Калькулятор лески -->
+    <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-weight-hanging text-cyan-400"></i> Подбор разрывной нагрузки шнура/лески
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm mb-1">Планируемый вес трофея (кг)</label>
+                <input type="number" id="fish-weight" value="3" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2">
+            </div>
+            <div>
+                <label class="block text-sm mb-1">Тип ловли</label>
+                <select id="fishing-type" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2">
+                    <option value="1.5">Спиннинг (чистая вода)</option>
+                    <option value="2.0">Спиннинг / Коряжник</option>
+                    <option value="1.2">Фидер / Поплавок</option>
+                </select>
+            </div>
+        </div>
+        <button onclick="calculateLine()" class="bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg font-medium transition">
+            Рассчитать диаметр
+        </button>
+
+        <div id="line-result" class="mt-4 hidden p-4 rounded-lg bg-gray-100 dark:bg-gray-800">
+            <div class="font-bold text-lg text-cyan-500" id="line-test"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+function calculateBite() {
+    const temp = parseFloat(document.getElementById('temp').value);
+    const press = parseFloat(document.getElementById('pressure').value);
+    const wind = parseFloat(document.getElementById('wind').value);
+
+    let score = 70;
+    if (press < 735 || press > 755) score -= 25;
+    if (wind > 8) score -= 30;
+    if (temp < 5 || temp > 28) score -= 20;
+
+    score = Math.max(10, Math.min(100, score));
+
+    const res = document.getElementById('bite-result');
+    const scoreEl = document.getElementById('bite-score');
+    const descEl = document.getElementById('bite-desc');
+
+    res.classList.remove('hidden');
+    scoreEl.innerText = `Вероятность активного клёва: ${score}%`;
+
+    if(score >= 70) descEl.innerText = 'Отличные условия! Рыба активна, стоит отправляться на водоем.';
+    else if(score >= 40) descEl.innerText = 'Умеренный клёв. Потребуется поэкспериментировать с насадками.';
+    else descEl.innerText = 'Низкая активность из-за неблагоприятных погодных факторов.';
+}
+
+function calculateLine() {
+    const weight = parseFloat(document.getElementById('fish-weight').value);
+    const coeff = parseFloat(document.getElementById('fishing-type').value);
+
+    const neededTestKg = (weight * coeff).toFixed(1);
+    const neededTestLb = (neededTestKg * 2.20462).toFixed(1);
+
+    const res = document.getElementById('line-result');
+    const testEl = document.getElementById('line-test');
+
+    res.classList.remove('hidden');
+    testEl.innerText = `Рекомендуемая разрывная нагрузка шнура: ~${neededTestKg} кг (${neededTestLb} lb)`;
+}
+</script>
+{% endblock %}

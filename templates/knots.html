@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-8">
+    <div>
+        <h1 class="text-3xl font-extrabold text-white mb-2">Рыболовные узлы</h1>
+        <p class="text-gray-400 text-sm">База надежных узлов с фильтрацией по сложности и видам ловли.</p>
+    </div>
+
+    <!-- Поиск и Фильтры -->
+    <div class="flex flex-col md:flex-row gap-4 items-center justify-between bg-gray-900 p-4 rounded-xl border border-gray-800">
+        <div class="relative w-full md:w-80">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+            <input type="text" id="searchInput" placeholder="Поиск узла..."
+                   class="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-500 transition">
+        </div>
+
+        <div class="flex flex-wrap md:flex-nowrap gap-3 w-full md:w-auto">
+            <select id="methodSelect" class="bg-gray-800 border border-gray-700 text-gray-300 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-500">
+                <option value="all">Все виды ловли</option>
+                <option value="Спиннинг">Спиннинг</option>
+                <option value="Фидер">Фидер</option>
+                <option value="Поплавок">Поплавок</option>
+                <option value="Карпфишинг">Карпфишинг</option>
+                <option value="Нахлыст">Нахлыст</option>
+            </select>
+
+            <div class="flex gap-1" id="difficultyButtons">
+                <button data-diff="all" class="diff-btn active-diff px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-600 text-white border border-cyan-500">Все</button>
+                <button data-diff="Легкий" class="diff-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700">Легкий</button>
+                <button data-diff="Средний" class="diff-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700">Средний</button>
+                <button data-diff="Сложный" class="diff-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700">Сложный</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Сетка узлов -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="knotsGrid">
+        {% for knot in knots %}
+        <a href="{{ url_for('knot_detail', knot_id=knot.id) }}"
+           class="knot-card block bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-cyan-500 transition duration-200 flex flex-col justify-between"
+           data-name="{{ knot.name | lower }}"
+           data-difficulty="{{ knot.difficulty }}"
+           data-methods="{{ knot.methods | join(',') if knot.methods else '' }}">
+            <div>
+                <div class="h-40 bg-gray-800/60 flex items-center justify-center relative border-b border-gray-800 p-4">
+                    {% if knot.image %}
+                        {% if knot.image.startswith('http://') or knot.image.startswith('https://') %}
+                            <img src="{{ knot.image }}" alt="{{ knot.name }}" class="h-full object-contain">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='images/knots/' + knot.image) }}" alt="{{ knot.name }}" class="h-full object-contain">
+                        {% endif %}
+                    {% else %}
+                    <div class="flex flex-col items-center text-gray-600">
+                        <i class="fa-solid fa-gear text-4xl mb-2"></i>
+                        <span class="text-xs">Схема скоро появится</span>
+                    </div>
+                    {% endif %}
+
+                    {% if knot.strength %}
+                    <span class="absolute top-3 left-3 bg-gray-900/90 text-green-400 border border-green-800/50 text-[11px] font-bold px-2 py-0.5 rounded">
+                        Прочность: {{ knot.strength }}
+                    </span>
+                    {% endif %}
+
+                    {% if knot.difficulty %}
+                    <span class="absolute top-3 right-3 bg-gray-900/90
+                        {% if knot.difficulty == 'Легкий' %}text-green-400 border-green-800/50
+                        {% elif knot.difficulty == 'Средний' %}text-yellow-400 border-yellow-800/50
+                        {% else %}text-red-400 border-red-800/50{% endif %}
+                        border text-xs font-semibold px-2.5 py-1 rounded-md">
+                        {{ knot.difficulty }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <div class="p-5 space-y-3">
+                    <h3 class="text-lg font-bold text-white group-hover:text-cyan-400 transition">{{ knot.name }}</h3>
+                    <p class="text-gray-300 text-sm leading-relaxed line-clamp-3">
+                        {{ knot.description }}
+                    </p>
+                </div>
+            </div>
+
+            {% if knot.methods %}
+            <div class="px-5 pb-5 pt-2 border-t border-gray-800/50 flex flex-wrap gap-1.5 mt-2">
+                {% for m in knot.methods %}
+                <span class="bg-gray-800 text-cyan-400 text-[11px] px-2 py-0.5 rounded border border-gray-700">
+                    {{ m }}
+                </span>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('searchInput');
+    const methodSelect = document.getElementById('methodSelect');
+    const diffBtns = document.querySelectorAll('.diff-btn');
+    const cards = document.querySelectorAll('.knot-card');
+
+    let currentDiff = 'all';
+
+    function filterData() {
+        const query = searchInput.value.toLowerCase().trim();
+        const selectedMethod = methodSelect.value;
+
+        cards.forEach(card => {
+            const name = card.dataset.name || '';
+            const diff = card.dataset.difficulty || '';
+            const methods = card.dataset.methods ? card.dataset.methods.split(',') : [];
+
+            const matchesSearch = name.includes(query);
+            const matchesDiff = currentDiff === 'all' || diff === currentDiff;
+            const matchesMethod = selectedMethod === 'all' || methods.includes(selectedMethod);
+
+            if (matchesSearch && matchesDiff && matchesMethod) {
+                card.classList.remove('hidden');
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+    }
+
+    searchInput?.addEventListener('input', filterData);
+    methodSelect?.addEventListener('change', filterData);
+
+    diffBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            diffBtns.forEach(b => {
+                b.classList.remove('bg-cyan-600', 'text-white', 'border-cyan-500');
+                b.classList.add('bg-gray-800', 'text-gray-300', 'border-gray-700');
+            });
+
+            btn.classList.remove('bg-gray-800', 'text-gray-300', 'border-gray-700');
+            btn.classList.add('bg-cyan-600', 'text-white', 'border-cyan-500');
+
+            currentDiff = btn.dataset.diff;
+            filterData();
+        });
+    });
+});
+</script>
+{% endblock %}

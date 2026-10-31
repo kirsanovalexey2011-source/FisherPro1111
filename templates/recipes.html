@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-8">
+    <div>
+        <h1 class="text-3xl font-extrabold text-white mb-2">Рыболовная кухня</h1>
+        <p class="text-gray-400 text-sm">Проверенные рецепты приготовления улова на костре, в коптильне и дома.</p>
+    </div>
+
+    <!-- Поиск и Фильтры -->
+    <div class="flex flex-col md:flex-row gap-4 items-center justify-between bg-gray-900 p-4 rounded-xl border border-gray-800">
+        <div class="relative w-full md:w-72">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+            <input type="text" id="searchInput" placeholder="Поиск рецепта или ингредиента..."
+                   class="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-500 transition placeholder-gray-500">
+        </div>
+
+        <div class="flex flex-wrap md:flex-nowrap gap-3 w-full md:w-auto">
+            <select id="fishSelect" class="bg-gray-800 border border-gray-700 text-gray-300 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-500">
+                <option value="all">Вся рыба</option>
+                {% for f in fish_types %}
+                <option value="{{ f }}">{{ f }}</option>
+                {% endfor %}
+            </select>
+
+            <select id="methodSelect" class="bg-gray-800 border border-gray-700 text-gray-300 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-500">
+                <option value="all">Все способы</option>
+                {% for m in cooking_methods %}
+                <option value="{{ m }}">{{ m }}</option>
+                {% endfor %}
+            </select>
+
+            <div class="flex gap-1" id="difficultyButtons">
+                <button data-diff="all" class="diff-btn active-diff px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-600 text-white border border-cyan-500">Все</button>
+                <button data-diff="Легко" class="diff-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700">Легко</button>
+                <button data-diff="Средне" class="diff-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700">Средне</button>
+                <button data-diff="Сложно" class="diff-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700">Сложно</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Сетка рецептов -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="recipesGrid">
+        {% for recipe in recipes %}
+        <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}"
+           class="recipe-card group block bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-cyan-500 transition duration-200 flex flex-col justify-between"
+           data-title="{{ recipe.title | lower }}"
+           data-ingredients="{{ recipe.ingredients | join(' ') | lower if recipe.ingredients is iterable and recipe.ingredients is not string else (recipe.ingredients | lower if recipe.ingredients else '') }}"
+           data-fish="{{ recipe.fish_type }}"
+           data-cooking="{{ recipe.cooking_method }}"
+           data-difficulty="{{ recipe.difficulty }}">
+            <div>
+                <!-- Изображение блюда -->
+                <div class="h-48 w-full bg-gray-800 relative overflow-hidden">
+                    {% if recipe.image %}
+                        {% if recipe.image.startswith('http://') or recipe.image.startswith('https://') %}
+                        <img src="{{ recipe.image }}"
+                             alt="{{ recipe.title }}"
+                             class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                        {% else %}
+                        <img src="{{ url_for('static', filename='images/recipes/' + recipe.image) }}"
+                             alt="{{ recipe.title }}"
+                             class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                        {% endif %}
+                    {% else %}
+                    <div class="w-full h-full flex flex-col items-center justify-center text-gray-600 bg-gray-800/80">
+                        <i class="fa-solid fa-utensils text-3xl mb-2"></i>
+                        <span class="text-xs">Фото скоро появится</span>
+                    </div>
+                    {% endif %}
+
+                    <!-- Бейджи поверх картинки -->
+                    <div class="absolute top-3 left-3 flex gap-2">
+                        <span class="bg-gray-950/80 backdrop-blur-md text-cyan-400 border border-cyan-800/60 text-xs font-semibold px-2.5 py-1 rounded-md">
+                            <i class="fa-solid fa-fish mr-1"></i>{{ recipe.fish_type }}
+                        </span>
+                    </div>
+                    <div class="absolute top-3 right-3">
+                        <span class="bg-gray-950/80 backdrop-blur-md text-gray-300 border border-gray-700 text-xs px-2.5 py-1 rounded-md">
+                            <i class="fa-solid fa-fire mr-1"></i>{{ recipe.cooking_method }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Контент карточки -->
+                <div class="p-5 space-y-3">
+                    <h3 class="text-lg font-bold text-white leading-snug group-hover:text-cyan-400 transition">{{ recipe.title }}</h3>
+                    <p class="text-gray-400 text-xs leading-relaxed line-clamp-2">{{ recipe.description }}</p>
+
+                    <div class="flex items-center justify-between text-xs text-gray-400 pt-3 border-t border-gray-800">
+                        <span><i class="fa-regular fa-clock mr-1 text-cyan-500"></i>{{ recipe.time }}</span>
+                        <span><i class="fa-solid fa-users mr-1 text-cyan-500"></i>{{ recipe.servings }} порции</span>
+                        <span class="{% if recipe.difficulty == 'Легко' %}text-green-400{% elif recipe.difficulty == 'Средне' %}text-yellow-400{% else %}text-red-400{% endif %} font-semibold">
+                            {{ recipe.difficulty }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-5 pt-0 flex justify-between items-center text-xs text-cyan-400 font-semibold group-hover:translate-x-1 transition-transform">
+                <span>Смотреть рецепт</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('searchInput');
+    const fishSelect = document.getElementById('fishSelect');
+    const methodSelect = document.getElementById('methodSelect');
+    const diffBtns = document.querySelectorAll('.diff-btn');
+    const cards = document.querySelectorAll('.recipe-card');
+
+    let currentDiff = 'all';
+
+    function filterData() {
+        const query = searchInput.value.toLowerCase().trim();
+        const selectedFish = fishSelect.value;
+        const selectedCooking = methodSelect.value;
+
+        cards.forEach(card => {
+            const title = card.dataset.title;
+            const ingredients = card.dataset.ingredients;
+            const fish = card.dataset.fish;
+            const cooking = card.dataset.cooking;
+            const diff = card.dataset.difficulty;
+
+            const matchesSearch = title.includes(query) || ingredients.includes(query);
+            const matchesFish = selectedFish === 'all' || fish === selectedFish;
+            const matchesCooking = selectedCooking === 'all' || cooking === selectedCooking;
+            const matchesDiff = currentDiff === 'all' || diff === currentDiff;
+
+            if (matchesSearch && matchesFish && matchesCooking && matchesDiff) {
+                card.classList.remove('hidden');
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+    }
+
+    searchInput.addEventListener('input', filterData);
+    fishSelect.addEventListener('change', filterData);
+    methodSelect.addEventListener('change', filterData);
+
+    diffBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            diffBtns.forEach(b => {
+                b.classList.remove('bg-cyan-600', 'text-white', 'border-cyan-500');
+                b.classList.add('bg-gray-800', 'text-gray-300', 'border-gray-700');
+            });
+
+            btn.classList.remove('bg-gray-800', 'text-gray-300', 'border-gray-700');
+            btn.classList.add('bg-cyan-600', 'text-white', 'border-cyan-500');
+
+            currentDiff = btn.dataset.diff;
+            filterData();
+        });
+    });
+});
+</script>
+{% endblock %}
