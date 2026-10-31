@@ -8,6 +8,7 @@ from urllib.parse import urlsplit
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import inspect
+from sqlalchemy.exc import IntegrityError
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
@@ -56,7 +57,9 @@ def safe_next_url(target):
     if not target:
         return None
     parsed = urlsplit(target)
-    if parsed.scheme or parsed.netloc or not target.startswith('/') or target.startswith('//') or '\\\\' in target:
+    if (parsed.scheme or parsed.netloc or not target.startswith('/') or target.startswith('//')
+            or '\\' in target or re.search(r'(?i)%5c', target)
+            or any(ord(char) < 32 or ord(char) == 127 for char in target)):
         return None
     return target
 
@@ -351,22 +354,27 @@ def register():
         username = request.form.get('username', '').strip()
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
-        if not 3 <= len(username) <= 64:
-            flash('Имя пользователя должно содержать от 3 до 64 символов.', 'error')
+        if not 3 <= len(username) <= 64 or not re.fullmatch(r'[A-Za-z0-9_.-]+', username):
+            flash('Имя пользователя: 3–64 символа, только латинские буквы, цифры, точка, дефис и подчёркивание.', 'error')
         elif len(email) > 120 or not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email):
             flash('Укажите корректный адрес электронной почты.', 'error')
-        elif len(password) < 10:
-            flash('Пароль должен содержать не менее 10 символов.', 'error')
+        elif not 10 <= len(password) <= 1024:
+            flash('Пароль должен содержать от 10 до 1024 символов.', 'error')
         elif User.query.filter(db.or_(db.func.lower(User.username) == username.lower(), db.func.lower(User.email) == email)).first():
             flash('Пользователь с таким именем или email уже существует.', 'error')
         else:
             user = User(username=username, email=email)
             user.set_password(password)
             db.session.add(user)
-            db.session.commit()
-            login_user(user)
-            flash('Аккаунт создан. Добро пожаловать!', 'success')
-            return redirect(url_for('user_profile', username=user.username))
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+                flash('Пользователь с таким именем или email уже существует.', 'error')
+            else:
+                login_user(user)
+                flash('Аккаунт создан. Добро пожаловать!', 'success')
+                return redirect(url_for('user_profile', username=user.username))
     return render_template('auth.html', mode='register')
 
 
