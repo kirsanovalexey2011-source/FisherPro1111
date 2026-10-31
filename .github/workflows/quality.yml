@@ -45,7 +45,7 @@ jobs:
 
           app_source = Path("app.py").read_text(encoding="utf-8")
           route_names = set(re.findall(
-              r"@app\\.route\\([^)]*\\)\\s*(?:@\\w+(?:\\([^)]*\\))?\\s*)*def\\s+(\\w+)\\s*\\(",
+              r"@app[.]route[(][^)]*[)][ ]*(?:@[A-Za-z_][A-Za-z_0-9]*(?:[(][^)]*[)])?[ ]*)*def[ ]+([A-Za-z_][A-Za-z_0-9]*)[ ]*[(]",
               app_source,
           ))
           route_names.add("static")
@@ -53,11 +53,11 @@ jobs:
           missing = set()
           for path in templates:
               source = path.read_text(encoding="utf-8")
-              for endpoint in re.findall(r"url_for\\(\\s*['\\"]([^'\\"]+)['\\"]", source):
+              for endpoint in re.findall(r"""url_for[(][ ]*['"]([^'"]+)['"]""", source):
                   if endpoint not in route_names:
                       missing.add(f"{path}: {endpoint}")
           if missing:
-              raise SystemExit("Unknown url_for endpoints:\\n" + "\\n".join(sorted(missing)))
+              raise SystemExit("Unknown url_for endpoints:\n" + "\n".join(sorted(missing)))
           print(f"Route references OK: {len(route_names)} endpoints checked")
 
           css_path = Path("static/css/modern-outdoor.css")
