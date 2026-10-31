@@ -45,7 +45,7 @@ jobs:
 
           app_source = Path("app.py").read_text(encoding="utf-8")
           route_names = set(re.findall(
-              r"@app[.]route[(][^)]*[)]\\s*(?:@[A-Za-z_][A-Za-z_0-9]*(?:[(][^)]*[)])?\\s*)*def\\s+([A-Za-z_][A-Za-z_0-9]*)\\s*[(]",
+              r"@app[.]route[(][^)]*[)]\s*(?:@[A-Za-z_][A-Za-z_0-9]*(?:[(][^)]*[)])?\s*)*def\s+([A-Za-z_][A-Za-z_0-9]*)\s*[(]",
               app_source,
           ))
           route_names.add("static")
