@@ -194,11 +194,6 @@ html.dark .rounded-xl[class*="bg-gray-800"] {
   background-color: var(--fe-surface-soft) !important;
   border-color: var(--fe-border) !important;
 }
-html:not(.dark) [class*="bg-gray-950/"],
-html:not(.dark) [class*="bg-gray-900/"],
-html:not(.dark) [class*="bg-gray-800/"] {
-  --tw-bg-opacity: 1;
-}
 html:not(.dark) input:not([type="checkbox"]):not([type="radio"]),
 html:not(.dark) select,
 html:not(.dark) textarea,
