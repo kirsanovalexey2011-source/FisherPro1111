@@ -174,3 +174,89 @@ html.dark [class~="text-gray-400"], html.dark [class~="text-gray-500"] { color: 
 }
 .form-label-custom { color: var(--fe-accent) !important; }
 .hero-subtitle { color: var(--fe-muted) !important; }
+
+/* Modern Outdoor refinement — legacy catalogue, filter and form surfaces */
+html:not(.dark) .rounded-2xl[class*="bg-gray-900"],
+html:not(.dark) .rounded-xl[class*="bg-gray-900"],
+html:not(.dark) .rounded-2xl[class*="bg-gray-800"],
+html:not(.dark) .rounded-xl[class*="bg-gray-800"] {
+  background-color: var(--fe-surface) !important;
+  border-color: var(--fe-border) !important;
+  box-shadow: var(--fe-shadow);
+}
+html.dark .rounded-2xl[class*="bg-gray-900"],
+html.dark .rounded-xl[class*="bg-gray-900"] {
+  background-color: var(--fe-surface) !important;
+  border-color: var(--fe-border) !important;
+}
+html.dark .rounded-2xl[class*="bg-gray-800"],
+html.dark .rounded-xl[class*="bg-gray-800"] {
+  background-color: var(--fe-surface-soft) !important;
+  border-color: var(--fe-border) !important;
+}
+html:not(.dark) [class*="bg-gray-950/"],
+html:not(.dark) [class*="bg-gray-900/"],
+html:not(.dark) [class*="bg-gray-800/"] {
+  --tw-bg-opacity: 1;
+}
+html:not(.dark) input:not([type="checkbox"]):not([type="radio"]),
+html:not(.dark) select,
+html:not(.dark) textarea,
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark select,
+html.dark textarea {
+  background-color: var(--fe-surface-soft);
+  color: var(--fe-text);
+  border-color: var(--fe-border);
+  border-radius: 12px;
+}
+input::placeholder, textarea::placeholder {
+  color: var(--fe-muted);
+  opacity: .85;
+}
+html:not(.dark) option,
+html.dark option {
+  background: var(--fe-surface);
+  color: var(--fe-text);
+}
+html:not(.dark) .fish-option,
+html.dark .fish-option {
+  color: var(--fe-text);
+}
+html:not(.dark) .fish-option:hover,
+html.dark .fish-option:hover {
+  background: var(--fe-surface-soft);
+}
+html:not(.dark) .profile-card,
+html:not(.dark) .section-card,
+html:not(.dark) .stat-card,
+html:not(.dark) .bio-box,
+html:not(.dark) .spot-card {
+  background: var(--fe-surface);
+  border-color: var(--fe-border);
+  color: var(--fe-text);
+}
+html:not(.dark) .profile-card *,
+html:not(.dark) .section-card *,
+html:not(.dark) .stat-card *,
+html:not(.dark) .bio-box *,
+html:not(.dark) .spot-card * {
+  border-color: var(--fe-border);
+}
+html:not(.dark) .profile-card .user-name,
+html:not(.dark) .section-title,
+html:not(.dark) .spot-card-title { color: var(--fe-text); }
+html:not(.dark) .profile-card .bio-text,
+html:not(.dark) .profile-card .spot-card-desc { color: var(--fe-muted); }
+.fe-card img, .water-card img, .recipe-card img, .tackle-card img, .knot-card img {
+  max-width: 100%;
+}
+button, .fe-button, .fe-button-secondary {
+  touch-action: manipulation;
+}
+@media (max-width: 640px) {
+  .glass-card-main { padding: 1rem !important; }
+  .hero-title { font-size: clamp(1.7rem, 8vw, 2.4rem) !important; }
+  .filter-bar { align-items: stretch; }
+  .filter-bar > button { justify-content: center; }
+}
