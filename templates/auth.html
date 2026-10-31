@@ -8,6 +8,7 @@
     <h1>{{ 'Создать аккаунт' if mode == 'register' else 'С возвращением!' }}</h1>
     <p class="fe-muted">{{ 'Зарегистрируйтесь, чтобы вести профиль и общаться с рыбаками.' if mode == 'register' else 'Войдите, чтобы открыть свой профиль.' }}</p>
     <form method="post" class="fe-auth-form">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
       {% if mode == 'register' %}
       <label>Имя пользователя<input class="fe-input" type="text" name="username" minlength="3" maxlength="64" autocomplete="username" required value="{{ request.form.get('username','') }}"></label>
       <label>Email<input class="fe-input" type="email" name="email" maxlength="120" autocomplete="email" required value="{{ request.form.get('email','') }}"></label>
