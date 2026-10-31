@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Подбор снастей — ФишЭксперт{% endblock %}
+
+{% block content %}
+<section class="max-w-5xl mx-auto py-10 space-y-8">
+    <header class="space-y-3">
+        <p class="text-sm font-bold uppercase tracking-widest fe-muted">Помощник рыбака</p>
+        <h1 class="text-3xl sm:text-4xl font-extrabold">Умный подбор снастей</h1>
+        <p class="fe-muted max-w-2xl">Выберите рыбу — подберём варианты из каталога ФишЭксперт и покажем советы из энциклопедии.</p>
+    </header>
+
+    <form method="get" action="{{ url_for('gear_advisor') }}" class="fe-card p-5 sm:p-7 space-y-4">
+        <label for="fish" class="block font-semibold">Какую рыбу планируете ловить?</label>
+        <div class="flex flex-col sm:flex-row gap-3">
+            <select id="fish" name="fish" required class="fe-input w-full">
+                <option value="">Выберите вид рыбы</option>
+                {% for fish in fishes %}
+                <option value="{{ fish.id }}" {% if selected_fish and selected_fish.id == fish.id %}selected{% endif %}>{{ fish.name }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="fe-button whitespace-nowrap">Подобрать снасти</button>
+        </div>
+    </form>
+
+    {% if selected_fish %}
+    <section class="space-y-4">
+        <div>
+            <h2 class="text-2xl font-bold">Подбор для: {{ selected_fish.name }}</h2>
+            {% if selected_fish.short_desc %}<p class="fe-muted mt-1">{{ selected_fish.short_desc }}</p>{% endif %}
+        </div>
+
+        {% for item in recommendations %}
+        <article class="fe-card p-5 sm:p-6 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <h3 class="text-xl font-bold">{{ item.title }}</h3>
+                <span class="text-sm fe-muted">{{ item.category or 'Совет' }}</span>
+            </div>
+            {% if item.fishing_type %}<p><strong>Способ ловли:</strong> {{ item.fishing_type }}</p>{% endif %}
+            {% if item.description %}<p class="fe-muted">{{ item.description }}</p>{% endif %}
+            {% if item.tips %}<div class="rounded-xl p-4 bg-black/5 dark:bg-white/5"><strong>Совет:</strong> {{ item.tips }}</div>{% endif %}
+            {% if item.id %}<a class="fe-button-secondary inline-flex no-underline" href="{{ url_for('tackle_detail', tackle_id=item.id) }}">Открыть снасть</a>{% endif %}
+        </article>
+        {% endfor %}
+        <p class="text-sm fe-muted">Рекомендации справочные: учитывайте водоём, сезон, погоду, местные правила и фактические условия ловли.</p>
+    </section>
+    {% else %}
+    <div class="fe-card p-6 sm:p-8">
+        <h2 class="text-xl font-bold mb-2">Как это работает</h2>
+        <p class="fe-muted">Подбор сопоставляет выбранный вид рыбы с целевыми видами в каталоге снастей. Если точного совпадения пока нет, используются сведения из энциклопедии рыб.</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}
