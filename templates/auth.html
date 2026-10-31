@@ -20,6 +20,7 @@
       <button class="fe-button w-full" type="submit">{{ 'Зарегистрироваться' if mode == 'register' else 'Войти' }}</button>
     </form>
     <p class="fe-auth-switch">{% if mode == 'register' %}Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти</a>{% else %}Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрироваться</a>{% endif %}</p>
+    {% if mode == 'login' %}<p class="fe-auth-switch"><a href="{{ url_for('forgot_password') }}">Забыли пароль?</a></p>{% endif %}
   </div>
 </section>
 {% endblock %}
