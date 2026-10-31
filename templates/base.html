@@ -73,6 +73,7 @@
             <div class="max-w-[1440px] mx-auto grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {% if current_user.is_authenticated %}
                     <a href="{{ url_for('user_profile', username=current_user.username) }}" class="col-span-2 sm:col-span-3 rounded-xl px-3 py-3 font-semibold"><i class="fa-regular fa-user mr-2"></i>{{ current_user.username }}</a>
+                    <form method="post" action="{{ url_for('logout') }}" class="col-span-2 sm:col-span-3"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button type="submit" class="fe-button-secondary w-full">Выйти</button></form>
                 {% else %}
                     <a href="{{ url_for('login') }}" class="col-span-2 sm:col-span-3 rounded-xl px-3 py-3 font-semibold"><i class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Войти</a>
                 {% endif %}
