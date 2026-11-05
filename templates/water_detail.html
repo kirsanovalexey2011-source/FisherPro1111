@@ -150,7 +150,7 @@
 
         </div>
 
-        {% if wb.lat is not none and wb.lon is not none %}
+        {% if wb.lat is defined and wb.lon is defined and wb.lat is not none and wb.lon is not none %}
         <div class="flex flex-wrap items-center justify-between gap-3 border-t border-gray-800 pt-5">
             <div class="text-xs text-gray-500"><i class="fa-solid fa-crosshairs text-cyan-400 mr-1"></i> Координаты: {{ '%.4f'|format(wb.lat) }}, {{ '%.4f'|format(wb.lon) }}</div>
             <a href="https://www.google.com/maps?q={{ wb.lat }},{{ wb.lon }}" target="_blank" rel="noopener noreferrer"
