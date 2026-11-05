@@ -17,8 +17,8 @@
     "methods": "Спиннинг, джиг, фидер, донная ловля, троллинг",
     "features": "На разных участках меняются глубины и течение. Перед поездкой проверьте сезонные ограничения и правила для конкретного участка.",
     "images": [
-      "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=1200&q=85&ref=volga-astrakhan-0",
-      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&ref=volga-astrakhan-1"
+      "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=1200&q=85&sig=volga-astrakhan-0",
+      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&sig=volga-astrakhan-1"
     ],
     "lat": 46.35,
     "lon": 48.03,
@@ -42,8 +42,8 @@
     "methods": "Джиг, спиннинг, фидер, троллинг",
     "features": "Ищите русловые бровки, выходы из ям и границы обратного течения.",
     "images": [
-      "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=1200&q=85&ref=volga-samara-0",
-      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&ref=volga-samara-1"
+      "https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=1200&q=85&sig=volga-samara-0",
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=85&sig=volga-samara-1"
     ],
     "lat": 53.2,
     "lon": 50.1,
@@ -67,8 +67,8 @@
     "methods": "Фидер, донка, спиннинг, поплавочная удочка",
     "features": "Учитывайте судовой ход, местные запреты и нерестовые участки.",
     "images": [
-      "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=1200&q=85&ref=don-rostov-0",
-      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&ref=don-rostov-1"
+      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85&sig=don-rostov-0",
+      "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1200&q=85&sig=don-rostov-1"
     ],
     "lat": 47.22,
     "lon": 39.72,
@@ -92,8 +92,8 @@
     "methods": "Спиннинг, фидер, донка, нахлыст",
     "features": "На перекатах ищут голавля и жереха, на глубоких бровках — судака и леща.",
     "images": [
-      "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=1200&q=85&ref=oka-0",
-      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&ref=oka-1"
+      "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=1200&q=85&sig=oka-0",
+      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&sig=oka-1"
     ],
     "lat": 54.8,
     "lon": 38.2,
@@ -117,8 +117,8 @@
     "methods": "Джиг, троллинг, фидер, зимнее блеснение",
     "features": "Большие расстояния и переменчивая погода требуют планирования маршрута и проверки прогноза.",
     "images": [
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&ref=rybinsk-0",
-      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85&ref=rybinsk-1"
+      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&sig=rybinsk-0",
+      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85&sig=rybinsk-1"
     ],
     "lat": 58.1,
     "lon": 38.4,
@@ -142,8 +142,8 @@
     "methods": "Спиннинг, поплавочная удочка, фидер, троллинг",
     "features": "Перспективны камышовые заливы, бровки у островов и протоки между плёсами.",
     "images": [
-      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=85&ref=seliger-0",
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&ref=seliger-1"
+      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=85&sig=seliger-0",
+      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&sig=seliger-1"
     ],
     "lat": 57.2,
     "lon": 33.1,
@@ -167,8 +167,8 @@
     "methods": "Спиннинг, троллинг, джиг, зимнее блеснение",
     "features": "На открытой воде важны ветер и волна. Для лососёвых видов действуют специальные ограничения.",
     "images": [
-      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=85&ref=ladoga-0",
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&ref=ladoga-1"
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=85&sig=ladoga-0",
+      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85&sig=ladoga-1"
     ],
     "lat": 60.1,
     "lon": 31.5,
@@ -192,8 +192,8 @@
     "methods": "Троллинг, спиннинг, джиг, зимняя ловля",
     "features": "Планируйте выходы с учётом ветра и расстояний; по отдельным видам действуют особые ограничения.",
     "images": [
-      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=85&ref=onega-0",
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&ref=onega-1"
+      "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1200&q=85&sig=onega-0",
+      "https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1200&q=85&sig=onega-1"
     ],
     "lat": 61.8,
     "lon": 35.5,
@@ -216,8 +216,8 @@
     "methods": "Спиннинг, поплавочная удочка, нахлыст",
     "features": "Омуль и другие эндемичные виды имеют особый режим добычи. Проверяйте актуальные правила.",
     "images": [
-      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=85&ref=baikal-0",
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&ref=baikal-1"
+      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=85&sig=baikal-0",
+      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&sig=baikal-1"
     ],
     "lat": 53.5,
     "lon": 108,
@@ -241,8 +241,8 @@
     "methods": "Спиннинг, джиг, фидер, зимняя ловля",
     "features": "Проверяйте пограничный режим и действующие правила на выбранном участке.",
     "images": [
-      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=85&ref=chudskoe-0",
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&ref=chudskoe-1"
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=85&sig=chudskoe-0",
+      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85&sig=chudskoe-1"
     ],
     "lat": 58.7,
     "lon": 27.5,
@@ -266,8 +266,8 @@
     "methods": "Спиннинг, поплавочная удочка, фидер",
     "features": "Ищите границы водной растительности, каменистые гряды и протоки.",
     "images": [
-      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=85&ref=vuoksa-0",
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&ref=vuoksa-1"
+      "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1200&q=85&sig=vuoksa-0",
+      "https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1200&q=85&sig=vuoksa-1"
     ],
     "lat": 61,
     "lon": 29.9,
@@ -291,8 +291,8 @@
     "methods": "Спиннинг, нахлыст, троллинг",
     "features": "Учитывайте удалённость берегов, погоду и ограничения на лососёвые виды.",
     "images": [
-      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=85&ref=imandra-0",
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&ref=imandra-1"
+      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=85&sig=imandra-0",
+      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&sig=imandra-1"
     ],
     "lat": 67.7,
     "lon": 33,
@@ -316,8 +316,8 @@
     "methods": "Спиннинг, троллинг, зимняя ловля",
     "features": "На больших акваториях важны навигация и запасной план на случай ветра.",
     "images": [
-      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=85&ref=vygozero-0",
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&ref=vygozero-1"
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=85&sig=vygozero-0",
+      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85&sig=vygozero-1"
     ],
     "lat": 63.5,
     "lon": 34.8,
@@ -341,8 +341,8 @@
     "methods": "Спиннинг, фидер, донная ловля",
     "features": "Учитывайте режим охраны бассейна Байкала и запреты на отдельные виды.",
     "images": [
-      "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=1200&q=85&ref=selenga-0",
-      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&ref=selenga-1"
+      "https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=1200&q=85&sig=selenga-0",
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=85&sig=selenga-1"
     ],
     "lat": 51.8,
     "lon": 107.6,
@@ -365,8 +365,8 @@
     "methods": "Спиннинг, нахлыст, донная ловля",
     "features": "Для тайменя и ряда сибирских видов действуют строгие ограничения.",
     "images": [
-      "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=1200&q=85&ref=yenisei-0",
-      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&ref=yenisei-1"
+      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85&sig=yenisei-0",
+      "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1200&q=85&sig=yenisei-1"
     ],
     "lat": 56,
     "lon": 92.9,
@@ -390,8 +390,8 @@
     "methods": "Спиннинг, фидер, донка, зимняя ловля",
     "features": "Сверяйте правила конкретного региона: ограничения в бассейне Оби различаются.",
     "images": [
-      "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=1200&q=85&ref=ob-0",
-      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&ref=ob-1"
+      "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=1200&q=85&sig=ob-0",
+      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&sig=ob-1"
     ],
     "lat": 55,
     "lon": 82.9,
@@ -415,8 +415,8 @@
     "methods": "Фидер, спиннинг, донка",
     "features": "Выбирайте точки по рельефу дна и силе течения; учитывайте судоходство.",
     "images": [
-      "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=1200&q=85&ref=irtysh-0",
-      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&ref=irtysh-1"
+      "https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=1200&q=85&sig=irtysh-0",
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=85&sig=irtysh-1"
     ],
     "lat": 55,
     "lon": 73.4,
@@ -440,8 +440,8 @@
     "methods": "Спиннинг, джиг, фидер",
     "features": "Проверяйте ограничения в бассейне Байкала и на участках гидроузлов.",
     "images": [
-      "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=1200&q=85&ref=angara-0",
-      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&ref=angara-1"
+      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85&sig=angara-0",
+      "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1200&q=85&sig=angara-1"
     ],
     "lat": 52.3,
     "lon": 104.3,
@@ -465,8 +465,8 @@
     "methods": "Джиг, троллинг, фидер, донка",
     "features": "Учитывайте режим водохранилищ и локальные запретные зоны.",
     "images": [
-      "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=1200&q=85&ref=kama-0",
-      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&ref=kama-1"
+      "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=1200&q=85&sig=kama-0",
+      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&sig=kama-1"
     ],
     "lat": 58,
     "lon": 56.3,
@@ -490,8 +490,8 @@
     "methods": "Спиннинг, джиг, троллинг, фидер",
     "features": "На открытой воде учитывайте волну и судоходство, на мелководьях — сезонные ограничения.",
     "images": [
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&ref=volga-res-0",
-      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85&ref=volga-res-1"
+      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=85&sig=volga-res-0",
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=85&sig=volga-res-1"
     ],
     "lat": 55.4,
     "lon": 49,
@@ -515,8 +515,8 @@
     "methods": "Спиннинг, фидер, донка, троллинг",
     "features": "Перспективны границы заливов, русловые свалы и участки с умеренным течением.",
     "images": [
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&ref=nizhnekamsk-0",
-      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85&ref=nizhnekamsk-1"
+      "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1200&q=85&sig=nizhnekamsk-0",
+      "https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1200&q=85&sig=nizhnekamsk-1"
     ],
     "lat": 55.7,
     "lon": 52.3,
@@ -540,8 +540,8 @@
     "methods": "Спиннинг, джиг, троллинг, зимняя ловля",
     "features": "Важны прогноз ветра, навигация и особенности режима водохранилища.",
     "images": [
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&ref=krasnoyarsk-res-0",
-      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85&ref=krasnoyarsk-res-1"
+      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&sig=krasnoyarsk-res-0",
+      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85&sig=krasnoyarsk-res-1"
     ],
     "lat": 55.9,
     "lon": 92.3,
@@ -565,8 +565,8 @@
     "methods": "Джиг, спиннинг, фидер, зимнее блеснение",
     "features": "Следите за ветром и ледовой обстановкой; выход на лёд требует отдельной оценки безопасности.",
     "images": [
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&ref=novosibirsk-res-0",
-      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85&ref=novosibirsk-res-1"
+      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=85&sig=novosibirsk-res-0",
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=85&sig=novosibirsk-res-1"
     ],
     "lat": 54.7,
     "lon": 82.9,
@@ -590,8 +590,8 @@
     "methods": "Джиг, троллинг, фидер, донка",
     "features": "Перспективны бровки старого русла и выходы из заливов.",
     "images": [
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&ref=volgograd-res-0",
-      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85&ref=volgograd-res-1"
+      "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1200&q=85&sig=volgograd-res-0",
+      "https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1200&q=85&sig=volgograd-res-1"
     ],
     "lat": 50.1,
     "lon": 45.4,
@@ -615,8 +615,8 @@
     "methods": "Спиннинг, фидер, поплавочная удочка",
     "features": "Ищите границы травы и свалы возле островов.",
     "images": [
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&ref=argazi-0",
-      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85&ref=argazi-1"
+      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&sig=argazi-0",
+      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85&sig=argazi-1"
     ],
     "lat": 55.5,
     "lon": 60.6,
@@ -639,8 +639,8 @@
     "methods": "Спиннинг, поплавочная удочка",
     "features": "Проверьте ограничения на отдельных участках и правила посещения природной территории.",
     "images": [
-      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=85&ref=turgoyak-0",
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&ref=turgoyak-1"
+      "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1200&q=85&sig=turgoyak-0",
+      "https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1200&q=85&sig=turgoyak-1"
     ],
     "lat": 55.15,
     "lon": 60.08,
@@ -664,8 +664,8 @@
     "methods": "Спиннинг, фидер, донка, нахлыст",
     "features": "На перекатах ищут голавля, на глубине — судака и сома.",
     "images": [
-      "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=1200&q=85&ref=belaya-0",
-      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&ref=belaya-1"
+      "https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=1200&q=85&sig=belaya-0",
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=85&sig=belaya-1"
     ],
     "lat": 54.7,
     "lon": 55.9,
@@ -689,8 +689,8 @@
     "methods": "Спиннинг, фидер, донка, поплавочная удочка",
     "features": "В нижнем течении учитывайте особенности лиманов, нерестовые участки и местные запреты.",
     "images": [
-      "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=1200&q=85&ref=kuban-0",
-      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&ref=kuban-1"
+      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85&sig=kuban-0",
+      "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1200&q=85&sig=kuban-1"
     ],
     "lat": 45,
     "lon": 38.9,
@@ -713,8 +713,8 @@
     "methods": "Спиннинг, донная ловля, фидер",
     "features": "Лососёвые виды регулируются специальными правилами; перед выездом проверьте сезон и участок.",
     "images": [
-      "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=1200&q=85&ref=amur-0",
-      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&ref=amur-1"
+      "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=1200&q=85&sig=amur-0",
+      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&sig=amur-1"
     ],
     "lat": 48.5,
     "lon": 135.1,
@@ -737,8 +737,8 @@
     "methods": "Спиннинг, троллинг, зимняя ловля",
     "features": "Для отдельных видов действуют ограничения; уточняйте региональные правила и доступность подъездов.",
     "images": [
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&ref=bureya-0",
-      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85&ref=bureya-1"
+      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=85&sig=bureya-0",
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=85&sig=bureya-1"
     ],
     "lat": 50.2,
     "lon": 130.4,
@@ -762,8 +762,8 @@
     "methods": "Поплавочная удочка, фидер, донная ловля, спиннинг",
     "features": "Морские виды и участки регулируются отдельными правилами; уточняйте ограничения перед рыбалкой.",
     "images": [
-      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&ref=azov-0",
-      "https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=1200&q=85&ref=azov-1"
+      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&sig=azov-0",
+      "https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=1200&q=85&sig=azov-1"
     ],
     "lat": 46,
     "lon": 37.4,
@@ -787,8 +787,8 @@
     "methods": "Спиннинг, фидер, поплавочная удочка",
     "features": "Выбирайте разрешённые участки и не ловите в зонах ограниченного доступа.",
     "images": [
-      "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=1200&q=85&ref=moscow-river-0",
-      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85&ref=moscow-river-1"
+      "https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=1200&q=85&sig=moscow-river-0",
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=85&sig=moscow-river-1"
     ],
     "lat": 55.75,
     "lon": 37.6,
@@ -812,8 +812,8 @@
     "methods": "Джиг, спиннинг, фидер, зимняя ловля",
     "features": "Следите за уровнем воды и ветром на открытых плёсах.",
     "images": [
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85&ref=gorky-res-0",
-      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85&ref=gorky-res-1"
+      "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1200&q=85&sig=gorky-res-0",
+      "https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1200&q=85&sig=gorky-res-1"
     ],
     "lat": 56.6,
     "lon": 43,
