@@ -380,3 +380,16 @@ def test_main_pages_render_without_server_errors(client):
         response = client.get(path)
         assert response.status_code == 200, f'{path} returned {response.status_code}'
 
+
+def test_invalid_login_error_is_not_duplicated(client):
+    page = client.get('/login')
+    token = csrf_token(page)
+    response = client.post('/login', data={
+        '_csrf_token': token,
+        'identity': 'unknown-user',
+        'password': 'incorrect-password',
+    }, follow_redirects=True)
+    html = response.get_data(as_text=True)
+    assert response.status_code == 200
+    assert html.count('Неверный логин или пароль.') == 1
+
