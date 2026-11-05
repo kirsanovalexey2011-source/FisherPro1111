@@ -149,7 +149,7 @@ def test_profile_dashboard_and_password_settings(client):
 
     with app.app_context():
         user = User.query.filter_by(username='ProfileAngler').one()
-        spot = Spot(title='Утренняя рыбалка', waterbody='Ладога', description='Поймал окуня', user_id=user.id)
+        spot = Spot(title='Утренняя рыбалка', waterbody='Ладога', fish_caught='Окунь', description='Поймал окуня', user_id=user.id)
         db.session.add(spot)
         db.session.flush()
         db.session.add(Like(user_id=user.id, spot_id=str(spot.id)))
@@ -162,6 +162,9 @@ def test_profile_dashboard_and_password_settings(client):
     assert 'Отчёты о рыбалке' in page
     assert 'Отличный клёв!' in page
     assert 'Утренняя рыбалка' in page
+    assert 'Отчётов с уловом' in page
+    assert 'Водоёмов посещено' in page
+    assert 'Видов рыбы отмечено' in page
 
     response = client.get('/user/edit')
     token = csrf_token(response)
