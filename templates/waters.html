@@ -14,6 +14,16 @@
 .water-filters label{display:block;margin:0 0 .4rem;color:var(--fe-muted,#9bb4ac);font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
 .water-filters input,.water-filters select{width:100%;min-height:44px;padding:.65rem .8rem;border:1px solid rgba(128,169,154,.24);border-radius:11px;background:var(--fe-input,#0a201d);color:var(--fe-text,#e9f5ef);font-size:.86rem;outline:none}
 .water-filters input:focus,.water-filters select:focus{border-color:#45c9a2;box-shadow:0 0 0 3px rgba(69,201,162,.12)}
+.water-region-panel{margin-top:1rem;padding:1rem;border:1px solid rgba(69,201,162,.2);border-radius:14px;background:rgba(4,24,20,.22)}
+.water-region-heading{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.75rem}
+.water-region-heading strong{color:var(--fe-text,#e9f5ef);font-size:.88rem}
+.water-region-heading span{color:var(--fe-muted,#9bb4ac);font-size:.72rem}
+.water-region-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.55rem}
+.water-region-option{display:flex!important;align-items:center;gap:.65rem;margin:0!important;padding:.7rem .8rem;border:1px solid rgba(128,169,154,.18);border-radius:10px;background:var(--fe-input,rgba(10,32,29,.65));color:var(--fe-text,#e9f5ef)!important;font-size:.82rem!important;font-weight:650!important;letter-spacing:0!important;text-transform:none!important;cursor:pointer}
+.water-region-option:has(input:checked){border-color:rgba(69,201,162,.65);background:rgba(32,185,141,.12);color:#65d6b4!important}
+.water-region-option input[type=checkbox]{flex:0 0 17px;width:17px;min-height:17px;height:17px;margin:0;accent-color:#20b98d}
+.water-region-actions{display:flex;gap:.75rem;align-items:center;margin-top:.7rem}
+.water-region-actions button{padding:0;border:0;background:none;color:#65d6b4;font-size:.72rem;font-weight:750;cursor:pointer}
 .water-filter-btn{min-height:44px;padding:.65rem 1rem;border-radius:11px;background:linear-gradient(135deg,#20b98d,#118b70);color:#05251d;font-size:.85rem;font-weight:900}
 .water-reset{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.6rem .9rem;border:1px solid rgba(128,169,154,.24);border-radius:11px;color:var(--fe-muted,#9bb4ac);font-size:.84rem;text-decoration:none}
 .water-card{display:block;overflow:hidden;border:1px solid rgba(128,169,154,.18);border-radius:20px;background:var(--fe-card,rgba(15,39,36,.82));text-decoration:none;transition:transform .22s,border-color .22s,box-shadow .22s}
@@ -48,15 +58,6 @@
                 <input id="water-search" type="search" name="search" value="{{ selected_search }}" placeholder="Название, город, регион...">
             </div>
             <div>
-                <label for="water-region">Субъект РФ / регион</label>
-                <select id="water-region" name="region">
-                    <option value="">Вся Россия</option>
-                    {% for region in regions %}
-                    <option value="{{ region }}" {% if selected_region == region %}selected{% endif %}>{{ region }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
                 <label for="water-fish">Вид рыбы</label>
                 <select id="water-fish" name="fish">
                     <option value="">Любая рыба</option>
@@ -75,6 +76,25 @@
                 </select>
             </div>
         </div>
+        <section class="water-region-panel" aria-label="Выбор регионов">
+            <div class="water-region-heading">
+                <strong><i class="fa-solid fa-map-location-dot mr-2"></i>Выбери регионы</strong>
+                <span>Можно отметить несколько одновременно</span>
+            </div>
+            <div class="water-region-options">
+                {% for region in regions %}
+                <label class="water-region-option">
+                    <input type="checkbox" name="region" value="{{ region }}" {% if region in selected_regions %}checked{% endif %}>
+                    <span>{{ region }}</span>
+                </label>
+                {% endfor %}
+            </div>
+            <div class="water-region-actions">
+                <button type="button" onclick="document.querySelectorAll('.water-region-option input').forEach(el => el.checked = false)">Снять все отметки</button>
+                <span aria-hidden="true">·</span>
+                <span>{{ regions|length }} регионов в каталоге</span>
+            </div>
+        </section>
         <div class="flex flex-wrap justify-end gap-2 mt-4 pt-3 border-t border-white/5">
             <a href="{{ url_for('waters') }}" class="water-reset"><i class="fa-solid fa-rotate-left mr-2"></i>Сбросить</a>
             <button type="submit" class="water-filter-btn"><i class="fa-solid fa-filter mr-2"></i>Применить фильтры</button>
