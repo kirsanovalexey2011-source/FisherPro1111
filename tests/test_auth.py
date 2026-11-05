@@ -134,3 +134,66 @@ def test_additive_migration_preserves_legacy_user_data():
         assert row.password_hash is None
     finally:
         engine.dispose()
+
+
+def test_profile_dashboard_and_password_settings(client):
+    response = client.get('/register')
+    token = csrf_token(response)
+    response = client.post('/register', data={
+        '_csrf_token': token,
+        'username': 'ProfileAngler',
+        'email': 'profile@example.com',
+        'password': 'original-secure-password',
+    }, follow_redirects=False)
+    assert response.status_code == 302
+
+    with app.app_context():
+        user = User.query.filter_by(username='ProfileAngler').one()
+        spot = Spot(title='Утренняя рыбалка', waterbody='Ладога', description='Поймал окуня', user_id=user.id)
+        db.session.add(spot)
+        db.session.flush()
+        db.session.add(Like(user_id=user.id, spot_id=str(spot.id)))
+        db.session.add(Comment(user_id=user.id, spot_id=str(spot.id), text='Отличный клёв!'))
+        db.session.commit()
+
+    response = client.get('/user/ProfileAngler')
+    page = response.get_data(as_text=True)
+    assert response.status_code == 200
+    assert 'Отчёты о рыбалке' in page
+    assert 'Отличный клёв!' in page
+    assert 'Утренняя рыбалка' in page
+
+    response = client.get('/user/edit')
+    token = csrf_token(response)
+    response = client.post('/user/edit', data={
+        '_csrf_token': token,
+        'bio': 'Люблю ловить на спиннинг.',
+        'favorite_tackle': 'Спиннинг',
+        'current_password': 'original-secure-password',
+        'new_password': 'updated-secure-password',
+        'password_confirmation': 'updated-secure-password',
+    }, follow_redirects=False)
+    assert response.status_code == 302
+
+    with app.app_context():
+        user = User.query.filter_by(username='ProfileAngler').one()
+        assert user.bio == 'Люблю ловить на спиннинг.'
+        assert user.favorite_tackle == 'Спиннинг'
+        assert user.check_password('updated-secure-password')
+        assert not user.check_password('original-secure-password')
+
+
+def test_avatar_upload_accepts_image_signature_and_rejects_fake_image(client, tmp_path, monkeypatch):
+    from io import BytesIO
+    from werkzeug.datastructures import FileStorage
+    from app import save_profile_avatar
+
+    monkeypatch.setattr(app, 'static_folder', str(tmp_path))
+    valid = FileStorage(stream=BytesIO(b'\x89PNG\r\n\x1a\n' + b'fake-test-payload'), filename='avatar.png')
+    saved_path = save_profile_avatar(valid)
+    assert saved_path.startswith('uploads/avatars/')
+    assert (tmp_path / saved_path).is_file()
+
+    invalid = FileStorage(stream=BytesIO(b'not-an-image'), filename='avatar.png')
+    with pytest.raises(ValueError):
+        save_profile_avatar(invalid)
