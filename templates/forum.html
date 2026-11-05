@@ -4,6 +4,9 @@
 {% block content %}
 {% if topic is defined %}
 <section class="max-w-4xl mx-auto space-y-5 py-6"><a href="{{ url_for('forum') }}">← Все обсуждения</a><h1 class="text-3xl font-bold">{{ topic.title }}</h1><p>{{ topic.author.username }} · {{ topic.category }}</p><p class="whitespace-pre-wrap">{{ topic.body }}</p>{% for reply in replies %}<article id="reply-{{ reply.id }}" class="rounded-xl border p-4"><b>{{ reply.author.username }}</b><p class="whitespace-pre-wrap">{{ reply.body }}</p></article>{% endfor %}{% if current_user.is_authenticated and not topic.is_locked %}<form method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><textarea name="body" required minlength="2" maxlength="5000"></textarea><button type="submit">Отправить ответ</button></form>{% endif %}</section>
+{% elif notifications is defined %}
+<section class="max-w-4xl mx-auto space-y-4 py-6"><h1 class="text-3xl font-bold text-white">Уведомления</h1><p class="text-gray-400">Непрочитанных: {{ unread_count }}</p>
+{% for notification in notifications %}<article class="rounded-xl border border-gray-700 bg-gray-900 p-4"><p class="text-white">{{ notification.reply.author.username }} ответил в теме {{ notification.topic.title }}</p><p class="text-sm text-gray-400">{{ notification.reply.body[:200] }}</p><form method="post" action="{{ url_for('open_forum_notification', notification_id=notification.id) }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button type="submit">Открыть тему</button></form></article>{% else %}<p>Уведомлений пока нет.</p>{% endfor %}</section>
 {% else %}
 <section class="max-w-6xl mx-auto space-y-6 py-6">
   <header class="rounded-3xl border border-emerald-700/30 bg-gradient-to-br from-emerald-950 to-slate-950 p-6 md:p-9">
