@@ -951,56 +951,98 @@ spots_list = []
 
 @app.route('/spots/add', methods=['POST'])
 def add_spot():
-    title = request.form.get('title')
-    waterbody = request.form.get('waterbody')
-    fish = request.form.get('fish')
-    text = request.form.get('text')
+    title = request.form.get('title', '').strip()
+    waterbody = request.form.get('waterbody', '').strip() or title
+    fish = request.form.get('fish_species', '').strip() or request.form.get('fish', '').strip()
+    notes = request.form.get('info', '').strip() or request.form.get('text', '').strip()
+    lat = request.form.get('lat', '').strip()
+    lon = request.form.get('lon', '').strip()
 
-    if title and text:
-        user_id = current_user.id if current_user.is_authenticated else None
-        new_spot = Spot(
-            title=title,
-            waterbody=waterbody,
-            fish_caught=fish,
-            description=text,
-            user_id=user_id
-        )
-        db.session.add(new_spot)
-        db.session.commit()
-        _CACHE.pop('normalized_spots', None)
+    if not title or not notes:
+        flash('Укажите название отчёта и добавьте заметки о рыбалке.', 'error')
+        return redirect(url_for('map_page'))
 
-    return redirect(url_for('spots'))
+    try:
+        latitude = float(lat)
+        longitude = float(lon)
+        if not (-90 <= latitude <= 90 and -180 <= longitude <= 180):
+            raise ValueError
+    except (TypeError, ValueError):
+        flash('Поставьте точку на карте, чтобы сохранить корректные координаты.', 'error')
+        return redirect(url_for('map_page'))
+
+    details = []
+    for label, value in (
+        ('Дата ловли', request.form.get('catch_date', '').strip()),
+        ('Время', ' — '.join(filter(None, (request.form.get('start_time', '').strip(),
+                                          request.form.get('end_time', '').strip())))),
+        ('Наживка / приманка', request.form.get('bait', '').strip()),
+        ('Снасть / оснастка', request.form.get('tackle', '').strip())
+    ):
+        if value:
+            details.append(f'{label}: {value}')
+
+    description = notes
+    if details:
+        description += '\n\n' + '\n'.join(details)
+
+    new_spot = Spot(
+        title=title[:200],
+        waterbody=waterbody[:100],
+        fish_caught=fish[:100],
+        description=description,
+        lat=latitude,
+        lon=longitude,
+        user_id=current_user.id if current_user.is_authenticated else None
+    )
+    db.session.add(new_spot)
+    db.session.commit()
+    _CACHE.pop('map_reports', None)
+    _CACHE.pop('species_list', None)
+    flash('Отчёт успешно опубликован на карте.', 'success')
+    return redirect(url_for('map_page'))
 
 
 @app.route('/map')
 def map_page():
-    all_spots = load_spots()
+    reports = []
+    species_set = set()
 
-    if 'map_reports' not in _CACHE:
-        reports = []
-        species_set = set()
+    for s in load_spots():
+        fish_sp = s['fish_clean']
+        if fish_sp != 'Не указана':
+            species_set.add(fish_sp)
+        reports.append({
+            'id': s.get('id'),
+            'title': s.get('title') or s.get('name') or 'Отчёт с рыбалки',
+            'waterbody': s['waterbody_clean'],
+            'fish_species': fish_sp,
+            'info': s.get('description') or s.get('content') or s.get('text') or '',
+            'lat': s['lat'],
+            'lon': s['lon'],
+            'url': url_for('spot_detail', spot_id=s.get('id')) if s.get('id') else None
+        })
 
-        for s in all_spots:
-            fish_sp = s['fish_clean']
-            if fish_sp != 'Не указана':
-                species_set.add(fish_sp)
-
-            reports.append({
-                'id': s.get('id'),
-                'title': s.get('title') or s.get('name') or 'Отчёт с рыбалки',
-                'waterbody': s['waterbody_clean'],
-                'fish_species': fish_sp,
-                'info': s.get('description') or s.get('content') or s.get('text') or '',
-                'lat': s['lat'],
-                'lon': s['lon']
-            })
-        _CACHE['map_reports'] = reports
-        _CACHE['species_list'] = sorted(list(species_set))
+    # Include reports created through the form; no existing JSON data is changed.
+    for spot in Spot.query.filter(Spot.lat.isnot(None), Spot.lon.isnot(None)).all():
+        fish_sp = spot.fish_caught or 'Не указана'
+        if fish_sp != 'Не указана':
+            species_set.add(fish_sp)
+        reports.append({
+            'id': spot.id,
+            'title': spot.title or 'Отчёт с рыбалки',
+            'waterbody': spot.waterbody or 'Водоём не указан',
+            'fish_species': fish_sp,
+            'info': spot.description or '',
+            'lat': spot.lat,
+            'lon': spot.lon,
+            'url': url_for('spots')
+        })
 
     return render_template(
         'map.html',
-        reports=_CACHE['map_reports'],
-        species_list=_CACHE['species_list'],
+        reports=reports,
+        species_list=sorted(species_set),
         yandex_api_key=YANDEX_API_KEY
     )
 
