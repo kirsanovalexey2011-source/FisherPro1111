@@ -432,3 +432,10 @@ button, .fe-button, .fe-button-secondary {
 .fe-settings-actions a{text-decoration:none}
 @media(max-width:800px){.fe-profile-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.fe-profile-columns{grid-template-columns:1fr}}
 @media(max-width:560px){.fe-profile-cover{min-height:145px;padding:1.2rem}.fe-profile-cover-art{right:2%;font-size:6rem}.fe-profile-identity{gap:.8rem;padding:0 1rem;margin-top:-38px}.fe-profile-avatar{width:82px;height:82px;border-width:4px;border-radius:22px;font-size:2.2rem}.fe-profile-name{min-width:130px}.fe-profile-name h1{font-size:1.55rem}.fe-profile-edit{width:100%;justify-content:center;margin:.2rem 0 0}.fe-profile-bio{grid-template-columns:1fr;gap:1rem;margin:1.2rem 1rem 1.3rem;padding-top:1rem}.fe-profile-favorite{padding:1rem 0 0;border-left:0;border-top:1px solid var(--fe-border)}.fe-profile-stats{gap:.65rem}.fe-profile-stat{padding:.9rem}.fe-profile-stat strong{font-size:1.5rem}.fe-profile-stat>span:last-child{font-size:.68rem}.fe-settings-password-grid{grid-template-columns:1fr}.fe-settings-actions{display:grid;grid-template-columns:1fr}.fe-settings-actions>*{justify-content:center}}
+
+
+/* Email verification and address-change settings */
+.fe-email-status { display: inline-flex; margin-top: 6px; color: var(--fe-muted, #718096); font-size: .88rem; }
+.fe-email-status-ok { color: #27845b; }
+.fe-email-change-form { display: grid; gap: 14px; margin-top: 18px; }
+.fe-email-change-form .fe-button-secondary { justify-self: start; }
