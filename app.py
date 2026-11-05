@@ -1469,7 +1469,7 @@ def recipe_detail(recipe_id):
 @app.route('/forum')
 def forum():
     topics = ForumTopic.query.order_by(ForumTopic.updated_at.desc()).limit(100).all()
-    return render_template('forum.html', topics=topics)
+    return render_template('forum.html', topics=topics, search_query='', category_filter='', categories=('Общее', 'Отчёты о рыбалке', 'Снасти и техника', 'Водоёмы и места', 'Вопросы новичков'))
 
 
 @app.route('/contacts')
