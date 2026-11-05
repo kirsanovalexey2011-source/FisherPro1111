@@ -1184,6 +1184,80 @@ def tools():
     return render_template('tools.html')
 
 
+def calculate_bite_forecast(data):
+    """Return an explainable heuristic index, not a catch probability."""
+    limits = {'temperature': (-10, 40), 'pressure': (680, 800), 'wind': (0, 25), 'cloud': (0, 100)}
+    values = {}
+    for key, bounds in limits.items():
+        try:
+            value = float(data.get(key, ''))
+        except (TypeError, ValueError):
+            raise ValueError('Проверьте числовые значения погодных условий.')
+        if not math.isfinite(value) or not bounds[0] <= value <= bounds[1]:
+            raise ValueError(f'Параметр {key}: допустимый диапазон {bounds[0]}–{bounds[1]}.')
+        values[key] = value
+    allowed = {
+        'pressure_trend': ('rising', 'stable', 'falling'),
+        'precipitation': ('none', 'light', 'heavy'),
+        'time_of_day': ('morning', 'day', 'evening', 'night'),
+        'fish_group': ('predatory', 'peaceful', 'coldwater'),
+        'water_type': ('river', 'lake'),
+    }
+    selected = {}
+    for key, options in allowed.items():
+        value = str(data.get(key, '')).strip().lower()
+        if value not in options:
+            raise ValueError('Выберите все параметры прогноза из списка.')
+        selected[key] = value
+    score, factors = 50, []
+    def add(points, positive, negative, neutral=None):
+        nonlocal score
+        score += points
+        factors.append(('Плюс' if points > 0 else ('Минус' if points < 0 else 'Нейтрально'), positive if points > 0 else (negative if points < 0 else (neutral or positive))))
+    p = values['pressure']
+    add(8 if 735 <= p <= 755 else (-8 if p < 720 or p > 770 else 0), 'Давление в умеренном диапазоне.', 'Давление заметно отклоняется от умеренного диапазона.', 'Давление без резких отклонений.')
+    trend = {'rising': 4, 'stable': 7, 'falling': -7}[selected['pressure_trend']]
+    add(trend, 'Давление растёт или остаётся стабильным.', 'Падающее давление может сопровождаться переменой погоды.')
+    wind = values['wind']
+    wind_points = 8 if 1 <= wind <= 5 else (3 if wind <= 8 else (-8 if wind <= 14 else -16))
+    add(wind_points, 'Ветер слабый или умеренный.', 'Сильный ветер может осложнить ловлю и снизить комфорт.')
+    cloud = values['cloud']
+    cloud_points = 5 if 25 <= cloud <= 75 else (-4 if cloud < 10 or cloud > 95 else 0)
+    add(cloud_points, 'Переменная облачность может быть комфортной.', 'Очень ясное или сплошь пасмурное небо — неблагоприятный фактор.', 'Облачность не даёт выраженного преимущества.')
+    add({'none': 0, 'light': 4, 'heavy': -10}[selected['precipitation']], 'Небольшие осадки иногда совпадают с активностью рыбы.', 'Сильные осадки ухудшают условия и безопасность.', 'Осадков нет.')
+    preferred = {'predatory': (10, 22), 'peaceful': (16, 26), 'coldwater': (6, 18)}[selected['fish_group']]
+    temp = values['temperature']
+    temp_points = 8 if preferred[0] <= temp <= preferred[1] else (-7 if temp < preferred[0] - 8 or temp > preferred[1] + 8 else 0)
+    add(temp_points, 'Температура подходит выбранной группе рыб по общей шкале.', 'Температура далеко от ориентировочного диапазона.', 'Температура не даёт выраженного преимущества.')
+    add({'morning': 8, 'day': 0, 'evening': 8, 'night': 2}[selected['time_of_day']], 'Утро или вечер часто удобны для наблюдения активности.', 'Ночной период зависит от вида и водоёма.', 'Дневная активность зависит от вида и сезона.')
+    score = max(0, min(100, int(round(score))))
+    if score >= 75:
+        level, title, advice = 'high', 'Хорошие условия', 'Можно планировать рыбалку и подбирать тактику под водоём.'
+    elif score >= 60:
+        level, title, advice = 'fair', 'Условия выше среднего', 'Есть смысл попробовать рыбалку, меняя глубину и приманки.'
+    elif score >= 45:
+        level, title, advice = 'moderate', 'Умеренные условия', 'Клёв может быть нестабильным. Экспериментируйте с наживкой.'
+    else:
+        level, title, advice = 'low', 'Сложные условия', 'Уделите внимание безопасности и рассмотрите другое время.'
+    return {'score': score, 'level': level, 'title': title, 'advice': advice, 'factors': factors,
+            'fish_label': {'predatory': 'хищная рыба', 'peaceful': 'мирная рыба', 'coldwater': 'холодолюбивая рыба'}[selected['fish_group']],
+            'water_label': {'river': 'река', 'lake': 'озеро'}[selected['water_type']]}
+
+
+@app.route('/bite-forecast', methods=['GET', 'POST'])
+def bite_forecast():
+    forecast = None
+    form_values = {'temperature': '18', 'pressure': '745', 'pressure_trend': 'stable', 'wind': '3', 'cloud': '45', 'precipitation': 'none', 'time_of_day': 'morning', 'fish_group': 'predatory', 'water_type': 'lake'}
+    if request.method == 'POST':
+        validate_csrf()
+        form_values.update({key: request.form.get(key, '') for key in form_values})
+        try:
+            forecast = calculate_bite_forecast(form_values)
+        except ValueError as error:
+            flash(str(error), 'error')
+    return render_template('bite_forecast.html', forecast=forecast, form_values=form_values)
+
+
 @app.route('/gear-advisor', methods=['GET', 'POST'])
 def gear_advisor():
     """Подбор снастей по выбранной целевой рыбе на основе локального каталога."""
