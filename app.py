@@ -1329,6 +1329,7 @@ def waterbody_to_dict(item):
         'features': item.features or '',
         'images': images if isinstance(images, list) else [],
         'image': (images[0] if isinstance(images, list) and images else ''),
+        'photo_note': 'Иллюстративные фотографии водной природы; точное изображение указанной точки не гарантируется.',
         'lat': item.lat,
         'lon': item.lon
     }
@@ -1691,7 +1692,7 @@ if __name__ == '__main__':
             name = str(record.get('name') or '').strip()
             if not name:
                 continue
-            existing = Waterbody.query.filter(db.func.lower(Waterbody.name) == name.casefold()).first()
+            existing = Waterbody.query.filter_by(name=name).first()
             images = record.get('images') or ([record.get('image')] if record.get('image') else [])
             if existing:
                 # Fill only blank fields so a previously edited record is never overwritten.
