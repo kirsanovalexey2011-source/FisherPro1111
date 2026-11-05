@@ -875,7 +875,11 @@ def spots():
     selected_place = request.args.get('place', '').strip()
     sort_order = request.args.get('sort', 'newest')
 
-    all_spots = load_spots()
+    all_spots = list(load_spots())
+    all_spots.extend(
+        database_spot_to_dict(item)
+        for item in Spot.query.order_by(Spot.id.desc()).all()
+    )
     filtered = []
 
     for s in all_spots:
@@ -921,17 +925,119 @@ def spots():
     )
 
 
+PHOTO_METADATA_MARKER = '\\n\\n[[FISH_EXPERT_PHOTOS:'
+PHOTO_METADATA_END = ']]'
+
+
+def split_report_description(description):
+    description = description or ''
+    if PHOTO_METADATA_MARKER not in description:
+        return description, []
+    visible_text, metadata = description.rsplit(PHOTO_METADATA_MARKER, 1)
+    try:
+        photos = json.loads(metadata.split(PHOTO_METADATA_END, 1)[0])
+        if not isinstance(photos, list):
+            photos = []
+        photos = [path for path in photos if isinstance(path, str) and path.startswith('uploads/reports/')]
+    except (ValueError, TypeError):
+        photos = []
+    return visible_text, photos
+
+
+def report_photos_from_uploads():
+    uploads = [item for item in request.files.getlist('photos') if item and item.filename]
+    if len(uploads) > 5:
+        raise ValueError('Можно прикрепить не более 5 фотографий к одному отчёту.')
+
+    allowed = {
+        '.jpg': (b'\\xff\\xd8\\xff',),
+        '.jpeg': (b'\\xff\\xd8\\xff',),
+        '.png': (b'\\x89PNG\\r\\n\\x1a\\n',),
+        '.webp': (b'RIFF',),
+        '.gif': (b'GIF87a', b'GIF89a')
+    }
+    saved = []
+    total_size = 0
+    target_dir = os.path.join(app.static_folder, 'uploads', 'reports')
+    os.makedirs(target_dir, exist_ok=True)
+
+    try:
+        for upload in uploads:
+            extension = os.path.splitext(upload.filename)[1].lower()
+            signatures = allowed.get(extension)
+            if not signatures:
+                raise ValueError('Поддерживаются только JPG, PNG, WEBP и GIF.')
+            header = upload.stream.read(12)
+            upload.stream.seek(0)
+            valid = any(header.startswith(signature) for signature in signatures)
+            if extension == '.webp':
+                valid = valid and header[8:12] == b'WEBP'
+            if not valid:
+                raise ValueError('Один из файлов не похож на изображение заявленного формата.')
+
+            content = upload.read()
+            upload.stream.seek(0)
+            total_size += len(content)
+            if total_size > 3 * 1024 * 1024:
+                raise ValueError('Общий размер фотографий не должен превышать 3 МБ.')
+            filename = f'{uuid.uuid4().hex}{extension}'
+            with open(os.path.join(target_dir, filename), 'wb') as image_file:
+                image_file.write(content)
+            saved.append('uploads/reports/' + filename)
+    except Exception:
+        for relative_path in saved:
+            try:
+                os.remove(os.path.join(app.static_folder, relative_path))
+            except OSError:
+                pass
+        raise
+    return saved
+
+
+def database_spot_to_dict(spot):
+    description, images = split_report_description(spot.description)
+    lines = description.splitlines()
+    metadata = {}
+    for line in lines:
+        if ': ' in line:
+            key, value = line.split(': ', 1)
+            metadata[key] = value
+    return {
+        'id': f'db-{spot.id}',
+        'title': spot.title or 'Отчёт с рыбалки',
+        'name': spot.title or 'Отчёт с рыбалки',
+        'description': description,
+        'waterbody': spot.waterbody or 'Водоём не указан',
+        'waterbody_clean': clean_waterbody_name(spot.waterbody or ''),
+        'fish_caught': spot.fish_caught or 'Не указана',
+        'fish_clean': spot.fish_caught or 'Не указана',
+        'tackle_clean': metadata.get('Снасть / оснастка', metadata.get('Наживка / приманка', 'Не указана')),
+        'date': metadata.get('Дата ловли', ''),
+        'lat': spot.lat,
+        'lon': spot.lon,
+        'images': images,
+        'cover_image': images[0] if images else None
+    }
+
+
 @app.route('/spot/<spot_id>')
 def spot_detail(spot_id):
-    all_spots = load_spots()
-    spot = next((s for s in all_spots if str(s.get('id')) == str(spot_id)), None)
+    if str(spot_id).startswith('db-'):
+        try:
+            db_id = int(str(spot_id)[3:])
+        except ValueError:
+            abort(404)
+        database_spot = db.session.get(Spot, db_id)
+        spot = database_spot_to_dict(database_spot) if database_spot else None
+    else:
+        spot = next((s for s in load_spots() if str(s.get('id')) == str(spot_id)), None)
+
     if not spot:
         return "Отчёт не найден", 404
 
     spot_id_str = str(spot_id)
     comments = Comment.query.filter_by(spot_id=spot_id_str).order_by(Comment.created_at.desc()).all()
     likes_count = Like.query.filter_by(spot_id=spot_id_str).count()
-
     user_liked = False
     if current_user.is_authenticated:
         user_liked = Like.query.filter_by(user_id=current_user.id, spot_id=spot_id_str).first() is not None
@@ -951,6 +1057,7 @@ spots_list = []
 
 @app.route('/spots/add', methods=['POST'])
 def add_spot():
+    validate_csrf()
     title = request.form.get('title', '').strip()
     waterbody = request.form.get('waterbody', '').strip() or title
     fish = request.form.get('fish_species', '').strip() or request.form.get('fish', '').strip()
@@ -963,8 +1070,7 @@ def add_spot():
         return redirect(url_for('map_page'))
 
     try:
-        latitude = float(lat)
-        longitude = float(lon)
+        latitude, longitude = float(lat), float(lon)
         if not (-90 <= latitude <= 90 and -180 <= longitude <= 180):
             raise ValueError
     except (TypeError, ValueError):
@@ -982,9 +1088,17 @@ def add_spot():
         if value:
             details.append(f'{label}: {value}')
 
-    description = notes
+    try:
+        photos = report_photos_from_uploads()
+    except ValueError as error:
+        flash(str(error), 'error')
+        return redirect(url_for('map_page'))
+
+    description = notes[:4000]
     if details:
-        description += '\n\n' + '\n'.join(details)
+        description += '\\n\\n' + '\\n'.join(details)
+    if photos:
+        description += PHOTO_METADATA_MARKER + json.dumps(photos, ensure_ascii=False) + PHOTO_METADATA_END
 
     new_spot = Spot(
         title=title[:200],
@@ -995,12 +1109,27 @@ def add_spot():
         lon=longitude,
         user_id=current_user.id if current_user.is_authenticated else None
     )
-    db.session.add(new_spot)
-    db.session.commit()
+    try:
+        db.session.add(new_spot)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        for relative_path in photos:
+            try:
+                os.remove(os.path.join(app.static_folder, relative_path))
+            except OSError:
+                pass
+        app.logger.exception('Could not save fishing report')
+        flash('Не удалось сохранить отчёт. Попробуйте ещё раз.', 'error')
+        return redirect(url_for('map_page'))
+
+    _CACHE.pop('normalized_spots', None)
     _CACHE.pop('map_reports', None)
     _CACHE.pop('species_list', None)
+    _CACHE.pop('fishes_list', None)
+    _CACHE.pop('places_list', None)
     flash('Отчёт успешно опубликован на карте.', 'success')
-    return redirect(url_for('map_page'))
+    return redirect(url_for('spot_detail', spot_id=f'db-{new_spot.id}'))
 
 
 @app.route('/map')
@@ -1023,20 +1152,21 @@ def map_page():
             'url': url_for('spot_detail', spot_id=s.get('id')) if s.get('id') else None
         })
 
-    # Include reports created through the form; no existing JSON data is changed.
+    # Include database reports and link each marker to its own report page.
     for spot in Spot.query.filter(Spot.lat.isnot(None), Spot.lon.isnot(None)).all():
         fish_sp = spot.fish_caught or 'Не указана'
         if fish_sp != 'Не указана':
             species_set.add(fish_sp)
+        visible_description, _ = split_report_description(spot.description)
         reports.append({
-            'id': spot.id,
+            'id': f'db-{spot.id}',
             'title': spot.title or 'Отчёт с рыбалки',
             'waterbody': spot.waterbody or 'Водоём не указан',
             'fish_species': fish_sp,
-            'info': spot.description or '',
+            'info': visible_description,
             'lat': spot.lat,
             'lon': spot.lon,
-            'url': url_for('spots')
+            'url': url_for('spot_detail', spot_id=f'db-{spot.id}')
         })
 
     return render_template(
