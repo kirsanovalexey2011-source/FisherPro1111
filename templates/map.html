@@ -296,6 +296,11 @@
 .fish-option:hover{background:rgba(79,209,173,.1);}
 .fish-badge{padding:4px 9px;border-radius:999px;background:rgba(28,163,129,.2);color:#9cebd2;}
 .file-upload-box{min-height:76px;display:grid;place-items:center;border-radius:12px;border-color:rgba(137,179,166,.28);background:rgba(4,17,17,.45);}
+.photo-preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:9px;margin-top:10px;}
+.photo-preview-item{position:relative;aspect-ratio:1;border:1px solid rgba(137,179,166,.24);border-radius:11px;overflow:hidden;background:#071816;}
+.photo-preview-item img{width:100%;height:100%;object-fit:cover;display:block;}
+.photo-preview-item span{position:absolute;left:5px;bottom:5px;padding:2px 6px;border-radius:6px;background:rgba(0,0,0,.72);color:#fff;font-size:.65rem;}
+
 .btn-submit-custom{min-height:48px;margin-top:1.1rem;border-radius:12px;background:linear-gradient(110deg,#16a982,#078baf);box-shadow:0 8px 22px rgba(8,145,125,.2);}
 .btn-submit-custom:hover{filter:brightness(1.08);transform:translateY(-1px);}
 .filter-bar{border-radius:14px;background:rgba(17,42,39,.8);border-color:rgba(120,180,165,.18);}
@@ -358,6 +363,7 @@
                     </div>
 
                     <form action="{{ url_for('add_spot') }}" method="POST" enctype="multipart/form-data" class="report-form" id="reportForm">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                         <div class="report-form-intro">
                             <span class="report-form-step">ВАШ УЛОВ · НОВАЯ ЗАПИСЬ</span>
                             <p>Отметьте место на карте и расскажите, как прошла рыбалка.</p>
@@ -435,11 +441,12 @@
                         <div class="mb-2">
                             <label class="form-label-custom">Фотографии трофея</label>
                             <div class="file-upload-box">
-                                <input type="file" name="photos" multiple accept="image/*" class="file-upload-input" id="photo-file-input">
+                                <input type="file" name="photos" multiple accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" class="file-upload-input" id="photo-file-input">
                                 <div style="color: #94a3b8; font-size: 0.82rem;" id="file-label-text">
-                                    Нажмите для выбора фото
+                                    <i class="fa-solid fa-cloud-arrow-up"></i> Выберите до 5 фото (JPG, PNG, WEBP, GIF)
                                 </div>
                             </div>
+                            <div id="photo-preview" class="photo-preview-grid" aria-live="polite"></div>
                         </div>
 
                         <!-- Описание -->
@@ -641,15 +648,33 @@
 
     var fileInput = document.getElementById('photo-file-input');
     var fileLabelText = document.getElementById('file-label-text');
-    if (fileInput && fileLabelText) {
+    var photoPreview = document.getElementById('photo-preview');
+    if (fileInput && fileLabelText && photoPreview) {
         fileInput.addEventListener('change', function() {
-            if (this.files && this.files.length > 0) {
-                fileLabelText.textContent = `Выбрано файлов: ${this.files.length}`;
-                fileLabelText.style.color = '#38bdf8';
-            } else {
-                fileLabelText.textContent = 'Нажмите для выбора фото';
-                fileLabelText.style.color = '#94a3b8';
+            photoPreview.innerHTML = '';
+            var files = Array.from(this.files || []);
+            if (files.length > 5) {
+                fileLabelText.textContent = 'Можно выбрать не более 5 фотографий';
+                fileLabelText.style.color = '#fca5a5';
+                this.value = '';
+                return;
             }
+            fileLabelText.textContent = files.length ? 'Выбрано фотографий: ' + files.length : 'Выберите до 5 фото (JPG, PNG, WEBP, GIF)';
+            fileLabelText.style.color = files.length ? '#7ee7c4' : '#94a3b8';
+            files.forEach(function(file) {
+                if (!file.type.startsWith('image/')) return;
+                var item = document.createElement('div');
+                item.className = 'photo-preview-item';
+                var image = document.createElement('img');
+                image.alt = file.name;
+                image.src = URL.createObjectURL(file);
+                image.onload = function() { URL.revokeObjectURL(image.src); };
+                var caption = document.createElement('span');
+                caption.textContent = file.name.length > 18 ? file.name.slice(0, 15) + '…' : file.name;
+                item.appendChild(image);
+                item.appendChild(caption);
+                photoPreview.appendChild(item);
+            });
         });
     }
 </script>
