@@ -24,7 +24,7 @@
       {% for category in categories %}<option value="{{ category }}">{{ category }}</option>{% endfor %}
     </select>
     <textarea name="body" required minlength="10" maxlength="10000" rows="4" placeholder="Опиши вопрос или тему подробнее..." class="w-full rounded-xl border border-gray-700 bg-gray-950 px-4 py-3 text-sm text-white"></textarea>
-    <button class="rounded-xl bg-emerald-500 px-5 py-3 text-sm font-bold text-emerald-950" type="submit">Опубликовать тему</button>
+    <button class="rounded-xl bg-emerald-500 px-5 py-3 text-sm font-bold text-emerald-950" type="button">Создание тем скоро появится</button>
   </form>
   {% else %}
   <p class="rounded-xl border border-emerald-700/30 bg-emerald-950/30 p-4 text-sm text-emerald-100">Чтобы создавать темы и отвечать, <a class="underline" href="{{ url_for('login', next=url_for('forum')) }}">войдите в аккаунт</a>.</p>
