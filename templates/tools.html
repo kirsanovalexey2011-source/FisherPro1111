@@ -5,6 +5,13 @@
 <div class="space-y-8">
     <h1 class="text-3xl font-bold text-cyan-500 dark:text-cyan-400">Инструменты рыболова</h1>
 
+    <a href="{{ url_for('gear_advisor') }}" class="fe-card fe-card-hover block p-5 sm:p-6 no-underline">
+        <span class="fe-feature-icon"><i class="fa-solid fa-fish-fins"></i></span>
+        <h2 class="text-xl font-bold">Умный подбор снастей</h2>
+        <p class="fe-muted mt-2">Подберите снасти под выбранный вид рыбы: рекомендации из каталога и полезные советы по способу ловли.</p>
+        <span class="mt-4 inline-flex items-center gap-2 text-sm font-bold" style="color:var(--fe-accent)">Подобрать снасти <i class="fa-solid fa-arrow-right"></i></span>
+    </a>
+
     <a href="{{ url_for('bite_forecast') }}" class="fe-card fe-card-hover block p-5 sm:p-6 no-underline">
         <span class="fe-feature-icon"><i class="fa-solid fa-cloud-sun-rain"></i></span>
         <h2 class="text-xl font-bold">Подробный прогноз клёва</h2>
