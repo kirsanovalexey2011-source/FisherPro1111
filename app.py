@@ -1565,7 +1565,7 @@ def forum_topic(topic_id):
         ).update({'is_read': True}, synchronize_session=False)
         db.session.commit()
     replies = topic.replies.order_by(ForumReply.created_at.asc(), ForumReply.id.asc()).all()
-    return render_template('forum_topic.html', topic=topic, replies=replies)
+    return render_template('forum.html', topic=topic, replies=replies)
 
 
 @app.route('/forum/notifications')
@@ -1575,7 +1575,7 @@ def forum_notifications():
         recipient_id=current_user.id
     ).order_by(ForumNotification.created_at.desc(), ForumNotification.id.desc()).limit(100).all()
     unread_count = ForumNotification.query.filter_by(recipient_id=current_user.id, is_read=False).count()
-    return render_template('forum_notifications.html', notifications=notifications, unread_count=unread_count)
+    return render_template('forum.html', notifications=notifications, unread_count=unread_count)
 
 
 @app.route('/forum/notifications/<int:notification_id>/open', methods=['POST'])
