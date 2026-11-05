@@ -1348,7 +1348,12 @@ def waterbody_to_dict(item):
 @app.route('/water')
 def waters():
     search_query = request.args.get('search', '').strip().casefold()
-    selected_region = request.args.get('region', '').strip()
+    selected_regions = [value.strip() for value in request.args.getlist('region') if value.strip()]
+    # Backward compatibility with links that still pass a single region value.
+    if not selected_regions:
+        legacy_region = request.args.get('region', '').strip()
+        if legacy_region:
+            selected_regions = [legacy_region]
     selected_fish = request.args.get('fish', '').strip()
     selected_type = request.args.get('type', '').strip()
 
@@ -1363,7 +1368,7 @@ def waters():
                              item.get('description', '')] + item_regions).casefold()
         if search_query and search_query not in haystack:
             continue
-        if selected_region and selected_region not in item_regions:
+        if selected_regions and not any(region in item_regions for region in selected_regions):
             continue
         if selected_fish and selected_fish not in (item.get('fishes') or []):
             continue
@@ -1377,7 +1382,7 @@ def waters():
     types = sorted({item.get('type', '') for item in records if item.get('type')})
     return render_template(
         'waters.html', waterbodies=filtered, regions=regions, fishes=fishes, types=types,
-        selected_search=search_query, selected_region=selected_region,
+        selected_search=search_query, selected_regions=selected_regions,
         selected_fish=selected_fish, selected_type=selected_type,
         total_waterbodies=len(records)
     )
