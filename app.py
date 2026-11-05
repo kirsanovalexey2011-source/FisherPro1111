@@ -1341,7 +1341,10 @@ def calculate_bite_forecast(data):
         level, title, advice = 'low', 'Сложные условия', 'Уделите внимание безопасности и рассмотрите другое время.'
     return {'score': score, 'level': level, 'title': title, 'advice': advice, 'factors': factors,
             'fish_label': {'predatory': 'хищная рыба', 'peaceful': 'мирная рыба', 'coldwater': 'холодолюбивая рыба'}[selected['fish_group']],
-            'water_label': {'river': 'река', 'lake': 'озеро'}[selected['water_type']],\n            'season': season if season in ('spring', 'summer', 'autumn', 'winter') else None,\n            'season_label': {'spring': 'весна', 'summer': 'лето', 'autumn': 'осень', 'winter': 'зима'}.get(season),\n            'year': str(data.get('year') or datetime.now().astimezone().year)}
+            'water_label': {'river': 'река', 'lake': 'озеро'}[selected['water_type']],
+            'season': season if season in ('spring', 'summer', 'autumn', 'winter') else None,
+            'season_label': {'spring': 'весна', 'summer': 'лето', 'autumn': 'осень', 'winter': 'зима'}.get(season),
+            'year': str(data.get('year') or datetime.now().astimezone().year)}
 
 
 @app.route('/bite-forecast', methods=['GET', 'POST'])
