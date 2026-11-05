@@ -5,34 +5,12 @@
 <div class="space-y-8">
     <h1 class="text-3xl font-bold text-cyan-500 dark:text-cyan-400">Инструменты рыболова</h1>
 
-    <!-- Калькулятор прогноза клёва -->
-    <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
-        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-            <i class="fa-solid fa-cloud-sun-rain text-cyan-400"></i> Экспресс-расчёт вероятности клёва
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div>
-                <label class="block text-sm mb-1">Температура воздуха (°C)</label>
-                <input type="number" id="temp" value="18" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2">
-            </div>
-            <div>
-                <label class="block text-sm mb-1">Атмосферное давление (мм рт. ст.)</label>
-                <input type="number" id="pressure" value="745" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2">
-            </div>
-            <div>
-                <label class="block text-sm mb-1">Ветер (м/с)</label>
-                <input type="number" id="wind" value="3" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2">
-            </div>
-        </div>
-        <button onclick="calculateBite()" class="bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg font-medium transition">
-            Рассчитать прогноз
-        </button>
-
-        <div id="bite-result" class="mt-4 hidden p-4 rounded-lg bg-gray-100 dark:bg-gray-800">
-            <div class="font-bold text-lg" id="bite-score"></div>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1" id="bite-desc"></p>
-        </div>
-    </div>
+    <a href="{{ url_for('bite_forecast') }}" class="fe-card fe-card-hover block p-5 sm:p-6 no-underline">
+        <span class="fe-feature-icon"><i class="fa-solid fa-cloud-sun-rain"></i></span>
+        <h2 class="text-xl font-bold">Подробный прогноз клёва</h2>
+        <p class="fe-muted mt-2">Учитывает давление и его изменение, ветер, облачность, осадки, время суток и группу рыб.</p>
+        <span class="mt-4 inline-flex items-center gap-2 text-sm font-bold" style="color:var(--fe-accent)">Рассчитать условия <i class="fa-solid fa-arrow-right"></i></span>
+    </a>
 
     <!-- Калькулятор лески -->
     <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
