@@ -18,6 +18,12 @@ ADDITIVE_USER_COLUMNS = {
     "password_hash": "VARCHAR(255)",
     "password_reset_token_hash": "VARCHAR(64)",
     "password_reset_sent_at": "DATETIME",
+    "email_verified": "BOOLEAN",
+    "email_verification_token_hash": "VARCHAR(64)",
+    "email_verification_sent_at": "DATETIME",
+    "pending_email": "VARCHAR(120)",
+    "email_change_token_hash": "VARCHAR(64)",
+    "email_change_sent_at": "DATETIME",
 }
 
 
