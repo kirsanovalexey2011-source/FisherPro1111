@@ -1466,6 +1466,12 @@ def recipe_detail(recipe_id):
     return render_template('recipe_detail.html', recipe=recipe)
 
 
+@app.route('/forum')
+def forum():
+    topics = ForumTopic.query.order_by(ForumTopic.updated_at.desc()).limit(100).all()
+    return render_template('forum.html', topics=topics)
+
+
 @app.route('/contacts')
 def contacts():
     return render_template('contacts.html')
