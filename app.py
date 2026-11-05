@@ -8,7 +8,8 @@ import hashlib
 import smtplib
 import uuid
 from email.message import EmailMessage
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urlencode
+from urllib.request import urlopen
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import inspect
@@ -1184,6 +1185,96 @@ def tools():
     return render_template('tools.html')
 
 
+
+def _fetch_weather_json(url):
+    """Fetch public Open-Meteo JSON with a short timeout."""
+    with urlopen(url, timeout=8) as response:
+        return json.loads(response.read().decode('utf-8'))
+
+
+def get_weather_for_location(location):
+    """Resolve a city/waterbody and return current local weather from Open-Meteo."""
+    location = str(location or '').strip()
+    if not location or len(location) > 120:
+        raise ValueError('Укажите город или водоём (до 120 символов).')
+
+    coords = None
+    normalized = location.casefold()
+    for known_name, known_coords in KNOWN_COORDS.items():
+        if known_name in normalized or normalized in known_name:
+            coords = known_coords
+            place_name = location
+            break
+    else:
+        query = urlencode({'name': location, 'count': 1, 'language': 'ru', 'format': 'json'})
+        geo = _fetch_weather_json('https://geocoding-api.open-meteo.com/v1/search?' + query)
+        results = geo.get('results') or []
+        if not results:
+            raise ValueError('Место не найдено. Попробуйте указать ближайший город.')
+        place = results[0]
+        coords = (float(place['latitude']), float(place['longitude']))
+        place_name = ', '.join(part for part in (place.get('name'), place.get('admin1'), place.get('country')) if part)
+
+    params = {
+        'latitude': coords[0], 'longitude': coords[1],
+        'current': 'temperature_2m,precipitation,rain,showers,snowfall,weather_code,cloud_cover,pressure_msl,surface_pressure,wind_speed_10m',
+        'hourly': 'surface_pressure',
+        'forecast_days': 1, 'past_days': 1, 'timezone': 'auto'
+    }
+    weather = _fetch_weather_json('https://api.open-meteo.com/v1/forecast?' + urlencode(params))
+    current = weather.get('current') or {}
+    if not current or current.get('temperature_2m') is None:
+        raise ValueError('Сервис погоды не вернул текущие условия для этого места.')
+
+    local_time = datetime.fromisoformat(str(current.get('time')).replace('Z', '+00:00'))
+    hour = local_time.hour
+    time_of_day = 'night' if hour < 5 or hour >= 22 else ('morning' if hour < 10 else ('day' if hour < 17 else 'evening'))
+    month = local_time.month
+    northern = coords[0] >= 0
+    if northern:
+        season = 'winter' if month in (12, 1, 2) else ('spring' if month in (3, 4, 5) else ('summer' if month in (6, 7, 8) else 'autumn'))
+    else:
+        season = 'summer' if month in (12, 1, 2) else ('autumn' if month in (3, 4, 5) else ('winter' if month in (6, 7, 8) else 'spring'))
+
+    pressure_hpa = current.get('surface_pressure') or current.get('pressure_msl')
+    hourly = weather.get('hourly') or {}
+    times, pressures = hourly.get('time') or [], hourly.get('surface_pressure') or []
+    previous = []
+    for stamp, pressure in zip(times, pressures):
+        try:
+            point_time = datetime.fromisoformat(str(stamp))
+            if 1 <= (local_time - point_time).total_seconds() / 3600 <= 4 and pressure is not None:
+                previous.append(float(pressure))
+        except (TypeError, ValueError):
+            continue
+    trend = 'stable'
+    if pressure_hpa is not None and previous:
+        delta = float(pressure_hpa) - previous[-1]
+        trend = 'rising' if delta >= 1.5 else ('falling' if delta <= -1.5 else 'stable')
+
+    precipitation = float(current.get('precipitation') or 0)
+    rain_snow = float(current.get('rain') or 0) + float(current.get('showers') or 0) + float(current.get('snowfall') or 0)
+    precip_level = 'heavy' if max(precipitation, rain_snow) >= 2.5 else ('light' if max(precipitation, rain_snow) > 0 else 'none')
+    return {
+        'location': place_name, 'temperature': round(float(current['temperature_2m']), 1),
+        'pressure': round(float(pressure_hpa) * 0.750061683, 1) if pressure_hpa is not None else None,
+        'wind': round(float(current.get('wind_speed_10m') or 0) / 3.6, 1),
+        'cloud': int(current.get('cloud_cover') or 0), 'pressure_trend': trend,
+        'precipitation': precip_level, 'time_of_day': time_of_day,
+        'season': season, 'local_time': local_time.strftime('%d.%m.%Y %H:%M'),
+        'year': local_time.year, 'month': month, 'weather_code': current.get('weather_code')
+    }
+
+
+@app.route('/api/weather')
+def bite_forecast_weather():
+    try:
+        return jsonify(get_weather_for_location(request.args.get('location', '')))
+    except (ValueError, OSError, TimeoutError, json.JSONDecodeError) as error:
+        app.logger.warning('Weather lookup failed: %s', error)
+        return jsonify({'error': str(error) or 'Не удалось получить погоду.'}), 400
+
+
 def calculate_bite_forecast(data):
     """Return an explainable heuristic index, not a catch probability."""
     limits = {'temperature': (-10, 40), 'pressure': (680, 800), 'wind': (0, 25), 'cloud': (0, 100)}
@@ -1230,6 +1321,15 @@ def calculate_bite_forecast(data):
     temp_points = 8 if preferred[0] <= temp <= preferred[1] else (-7 if temp < preferred[0] - 8 or temp > preferred[1] + 8 else 0)
     add(temp_points, 'Температура подходит выбранной группе рыб по общей шкале.', 'Температура далеко от ориентировочного диапазона.', 'Температура не даёт выраженного преимущества.')
     add({'morning': 8, 'day': 0, 'evening': 8, 'night': 2}[selected['time_of_day']], 'Утро или вечер часто удобны для наблюдения активности.', 'Ночной период зависит от вида и водоёма.', 'Дневная активность зависит от вида и сезона.')
+    season = str(data.get('season', '')).strip().lower()
+    if season in ('spring', 'summer', 'autumn', 'winter'):
+        seasonal_points = {
+            'predatory': {'spring': 5, 'summer': 1, 'autumn': 7, 'winter': -4},
+            'peaceful': {'spring': 3, 'summer': 7, 'autumn': 2, 'winter': -6},
+            'coldwater': {'spring': 3, 'summer': -5, 'autumn': 4, 'winter': 5},
+        }[selected['fish_group']][season]
+        season_names = {'spring': 'весна', 'summer': 'лето', 'autumn': 'осень', 'winter': 'зима'}
+        add(seasonal_points, f'Сезон ({season_names[season]}) в целом подходит выбранной группе рыб.', f'Сезон ({season_names[season]}) может снижать активность выбранной группы.', 'Сезонный фактор нейтрален.')
     score = max(0, min(100, int(round(score))))
     if score >= 75:
         level, title, advice = 'high', 'Хорошие условия', 'Можно планировать рыбалку и подбирать тактику под водоём.'
@@ -1241,13 +1341,14 @@ def calculate_bite_forecast(data):
         level, title, advice = 'low', 'Сложные условия', 'Уделите внимание безопасности и рассмотрите другое время.'
     return {'score': score, 'level': level, 'title': title, 'advice': advice, 'factors': factors,
             'fish_label': {'predatory': 'хищная рыба', 'peaceful': 'мирная рыба', 'coldwater': 'холодолюбивая рыба'}[selected['fish_group']],
-            'water_label': {'river': 'река', 'lake': 'озеро'}[selected['water_type']]}
+            'water_label': {'river': 'река', 'lake': 'озеро'}[selected['water_type']],\n            'season': season if season in ('spring', 'summer', 'autumn', 'winter') else None,\n            'season_label': {'spring': 'весна', 'summer': 'лето', 'autumn': 'осень', 'winter': 'зима'}.get(season),\n            'year': str(data.get('year') or datetime.now().astimezone().year)}
 
 
 @app.route('/bite-forecast', methods=['GET', 'POST'])
 def bite_forecast():
     forecast = None
-    form_values = {'temperature': '18', 'pressure': '745', 'pressure_trend': 'stable', 'wind': '3', 'cloud': '45', 'precipitation': 'none', 'time_of_day': 'morning', 'fish_group': 'predatory', 'water_type': 'lake'}
+    now = datetime.now().astimezone()
+    form_values = {'temperature': '18', 'pressure': '745', 'pressure_trend': 'stable', 'wind': '3', 'cloud': '45', 'precipitation': 'none', 'time_of_day': 'morning', 'season': '', 'year': str(now.year), 'location': '', 'fish_group': 'predatory', 'water_type': 'lake'}
     if request.method == 'POST':
         validate_csrf()
         form_values.update({key: request.form.get(key, '') for key in form_values})
@@ -1255,7 +1356,8 @@ def bite_forecast():
             forecast = calculate_bite_forecast(form_values)
         except ValueError as error:
             flash(str(error), 'error')
-    return render_template('bite_forecast.html', forecast=forecast, form_values=form_values)
+    return render_template('bite_forecast.html', forecast=forecast, form_values=form_values,
+                           current_date=now.strftime('%d.%m.%Y'), current_year=now.year)
 
 
 @app.route('/gear-advisor', methods=['GET', 'POST'])
