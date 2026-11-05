@@ -27,6 +27,28 @@
     </section>
 
     <section class="fe-settings-card">
+      <div class="fe-settings-card-title"><span><i class="fa-regular fa-envelope"></i></span><div><h2>Электронная почта</h2><p>Адрес меняется только после подтверждения письма на новую почту.</p></div></div>
+      <div class="fe-settings-field">
+        <span>Текущий адрес</span>
+        <strong>{{ current_user.email }}</strong>
+        {% if current_user.email_verified %}<small class="fe-email-status fe-email-status-ok">Адрес подтверждён</small>
+        {% else %}<small class="fe-email-status">Адрес ещё не подтверждён</small>
+          <form method="post" action="{{ url_for('resend_email_verification') }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+            <button class="fe-button-secondary" type="submit">Отправить письмо повторно</button>
+          </form>
+        {% endif %}
+      </div>
+      {% if current_user.pending_email %}<p class="fe-settings-security-note">Ожидает подтверждения: <strong>{{ current_user.pending_email }}</strong></p>{% endif %}
+      <form method="post" action="{{ url_for('request_email_change') }}" class="fe-email-change-form">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <label class="fe-settings-field">Новый адрес<input class="fe-input" type="email" name="new_email" maxlength="120" required autocomplete="email" placeholder="name@example.com"></label>
+        <label class="fe-settings-field">Текущий пароль<input class="fe-input" type="password" name="current_password_for_email" required autocomplete="current-password" placeholder="Подтверди, что это твой аккаунт"></label>
+        <button class="fe-button-secondary" type="submit">Отправить ссылку подтверждения</button>
+      </form>
+    </section>
+
+    <section class="fe-settings-card">
       <div class="fe-settings-card-title"><span><i class="fa-solid fa-shield-halved"></i></span><div><h2>Безопасность</h2><p>Для смены пароля сначала подтверди текущий.</p></div></div>
       <label class="fe-settings-field">Текущий пароль<input class="fe-input" type="password" name="current_password" autocomplete="current-password" placeholder="Введи текущий пароль"></label>
       <div class="fe-settings-password-grid">
