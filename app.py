@@ -925,7 +925,7 @@ def spots():
     )
 
 
-PHOTO_METADATA_MARKER = '\\n\\n[[FISH_EXPERT_PHOTOS:'
+PHOTO_METADATA_MARKER = '\n\n[[FISH_EXPERT_PHOTOS:'
 PHOTO_METADATA_END = ']]'
 
 
@@ -950,9 +950,9 @@ def report_photos_from_uploads():
         raise ValueError('Можно прикрепить не более 5 фотографий к одному отчёту.')
 
     allowed = {
-        '.jpg': (b'\\xff\\xd8\\xff',),
-        '.jpeg': (b'\\xff\\xd8\\xff',),
-        '.png': (b'\\x89PNG\\r\\n\\x1a\\n',),
+        '.jpg': (b'\xff\xd8\xff',),
+        '.jpeg': (b'\xff\xd8\xff',),
+        '.png': (b'\x89PNG\r\n\x1a\n',),
         '.webp': (b'RIFF',),
         '.gif': (b'GIF87a', b'GIF89a')
     }
