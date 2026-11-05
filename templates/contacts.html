@@ -8,25 +8,25 @@
     <p class="mt-3 max-w-2xl text-sm leading-7 text-emerald-100/75">Здесь можно перейти к обсуждениям, поделиться рыболовным отчётом или предложить новый водоём для атласа.</p>
   </header>
   <div class="grid gap-4 md:grid-cols-3">
-    <a href="{{ url_for('forum') }}" class="rounded-2xl border border-gray-700 bg-gray-900 p-6 no-underline hover:border-emerald-500/60">
+    <a href="{{ url_for('forum') }}" class="fe-card fe-card-hover p-6 no-underline">
       <i class="fa-solid fa-comments text-2xl text-emerald-400"></i>
-      <h2 class="mt-4 font-bold text-white">Форум</h2>
-      <p class="mt-2 text-sm leading-6 text-gray-400">Задай вопрос, начни обсуждение или ответь другим рыбакам.</p>
+      <h2 class="mt-4 fe-heading">Форум</h2>
+      <p class="mt-2 text-sm leading-6 fe-muted">Задай вопрос, начни обсуждение или ответь другим рыбакам.</p>
       <span class="mt-4 inline-block text-sm font-semibold text-emerald-400">Перейти к форуму →</span>
     </a>
-    <a href="{{ url_for('spots') }}" class="rounded-2xl border border-gray-700 bg-gray-900 p-6 no-underline hover:border-emerald-500/60">
+    <a href="{{ url_for('spots') }}" class="fe-card fe-card-hover p-6 no-underline">
       <i class="fa-solid fa-fish-fins text-2xl text-emerald-400"></i>
-      <h2 class="mt-4 font-bold text-white">Отчёты о рыбалке</h2>
-      <p class="mt-2 text-sm leading-6 text-gray-400">Поделись уловом, условиями ловли и полезными наблюдениями.</p>
+      <h2 class="mt-4 fe-heading">Отчёты о рыбалке</h2>
+      <p class="mt-2 text-sm leading-6 fe-muted">Поделись уловом, условиями ловли и полезными наблюдениями.</p>
       <span class="mt-4 inline-block text-sm font-semibold text-emerald-400">Открыть отчёты →</span>
     </a>
-    <a href="{{ url_for('waters') }}" class="rounded-2xl border border-gray-700 bg-gray-900 p-6 no-underline hover:border-emerald-500/60">
+    <a href="{{ url_for('waters') }}" class="fe-card fe-card-hover p-6 no-underline">
       <i class="fa-solid fa-water text-2xl text-emerald-400"></i>
-      <h2 class="mt-4 font-bold text-white">Атлас водоёмов</h2>
-      <p class="mt-2 text-sm leading-6 text-gray-400">Найди водоём и посмотри сведения о рыбе и способах ловли.</p>
+      <h2 class="mt-4 fe-heading">Атлас водоёмов</h2>
+      <p class="mt-2 text-sm leading-6 fe-muted">Найди водоём и посмотри сведения о рыбе и способах ловли.</p>
       <span class="mt-4 inline-block text-sm font-semibold text-emerald-400">Открыть атлас →</span>
     </a>
   </div>
-  <p class="rounded-xl border border-gray-700 bg-gray-900/60 p-5 text-sm leading-6 text-gray-400">Публичные Telegram- и VK-ссылки, а также отдельный почтовый адрес поддержки пока не подключены. Мы не размещаем здесь вымышленные контакты. Для общения используй форум и отчёты на сайте.</p>
+  <p class="rounded-xl border border-gray-700 bg-gray-900/60 p-5 text-sm leading-6 fe-muted">Публичные Telegram- и VK-ссылки, а также отдельный почтовый адрес поддержки пока не подключены. Мы не размещаем здесь вымышленные контакты. Для общения используй форум и отчёты на сайте.</p>
 </section>
 {% endblock %}
