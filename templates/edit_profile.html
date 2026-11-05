@@ -25,8 +25,10 @@
       <label class="fe-settings-field">О себе<textarea class="fe-input" name="bio" rows="5" maxlength="1000" placeholder="Расскажи о любимых местах, способах ловли и своём опыте...">{{ current_user.bio or '' }}</textarea><small>До 1000 символов.</small></label>
       <label class="fe-settings-field">Любимая снасть<input class="fe-input" type="text" name="favorite_tackle" maxlength="100" value="{{ current_user.favorite_tackle or '' }}" placeholder="Например, спиннинг или фидер"></label>
     </section>
+    <div class="fe-settings-actions"><button class="fe-button" type="submit"><i class="fa-solid fa-check"></i> Сохранить профиль</button></div>
+  </form>
 
-    <section class="fe-settings-card">
+  <section class="fe-settings-card">
       <div class="fe-settings-card-title"><span><i class="fa-regular fa-envelope"></i></span><div><h2>Электронная почта</h2><p>Адрес меняется только после подтверждения письма на новую почту.</p></div></div>
       <div class="fe-settings-field">
         <span>Текущий адрес</span>
@@ -48,6 +50,8 @@
       </form>
     </section>
 
+  <form method="post" class="fe-settings-form">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
     <section class="fe-settings-card">
       <div class="fe-settings-card-title"><span><i class="fa-solid fa-shield-halved"></i></span><div><h2>Безопасность</h2><p>Для смены пароля сначала подтверди текущий.</p></div></div>
       <label class="fe-settings-field">Текущий пароль<input class="fe-input" type="password" name="current_password" autocomplete="current-password" placeholder="Введи текущий пароль"></label>
