@@ -302,7 +302,7 @@ button, .fe-button, .fe-button-secondary {
 .fish-modern-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1.35rem; }
 .fish-modern-card { display:flex; flex-direction:column; min-width:0; overflow:hidden; text-decoration:none !important; color:var(--fe-text) !important; border:1px solid var(--fe-border); border-radius:22px; background:var(--fe-surface); box-shadow:var(--fe-shadow); transition:transform .25s,border-color .25s,box-shadow .25s; }
 .fish-modern-card:hover { transform:translateY(-5px); border-color:var(--fe-accent); box-shadow:0 24px 55px rgba(0,0,0,.13); }
-.fish-modern-image { position:relative; display:grid; place-items:center; height:230px; margin:12px 12px 0; overflow:hidden; border-radius:15px; background:linear-gradient(145deg,var(--fe-surface-soft),var(--fe-bg)); }
+.fish-modern-image { position:relative; display:grid; place-items:center; height:230px; margin:12px 12px 0; overflow:hidden; border-radius:15px; background:#fff; }
 .fish-modern-image img { width:100%; height:100%; object-fit:contain; padding:12px; transition:transform .35s; }
 .fish-modern-card:hover .fish-modern-image img { transform:scale(1.055); }
 .fish-rarity-tag { position:absolute; top:12px; left:12px; padding:.35rem .65rem; border:1px solid rgba(255,255,255,.22); border-radius:999px; background:rgba(8,35,31,.82); color:#b8f4dc; font-size:.68rem; font-weight:800; backdrop-filter:blur(8px); }
