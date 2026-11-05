@@ -439,3 +439,12 @@ button, .fe-button, .fe-button-secondary {
 .fe-email-status-ok { color: #27845b; }
 .fe-email-change-form { display: grid; gap: 14px; margin-top: 18px; }
 .fe-email-change-form .fe-button-secondary { justify-self: start; }
+
+
+/* Bite forecast */
+.fe-forecast-field { display:flex; flex-direction:column; gap:.45rem; }
+.fe-forecast-field label { color:var(--fe-text); font-size:.9rem; font-weight:700; }
+.fe-forecast-field input, .fe-forecast-field select { width:100%; min-height:46px; padding:.7rem .85rem; border:1px solid var(--fe-border); border-radius:12px; background:var(--fe-surface-soft); color:var(--fe-text); }
+.fe-forecast-result { border:1px solid var(--fe-border); border-radius:22px; background:var(--fe-surface); padding:clamp(1.2rem,3vw,2rem); box-shadow:var(--fe-shadow); }
+.fe-forecast-score { font-size:clamp(3rem,8vw,5rem); line-height:1; font-weight:900; letter-spacing:-.07em; color:var(--fe-accent); }
+.fe-forecast-factor { padding:.8rem 1rem; border-radius:13px; background:var(--fe-surface-soft); color:var(--fe-text); }
