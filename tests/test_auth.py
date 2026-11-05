@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import pytest
 from sqlalchemy import create_engine, inspect
 
-from app import app, db, User, safe_next_url
+from app import app, db, User, Spot, Like, Comment, safe_next_url
 from scripts.migrate_auth_schema import migrate_user_auth_columns
 
 
