@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import pytest
 from sqlalchemy import create_engine, inspect
 
-from app import app, db, User, Spot, Like, Comment, safe_next_url
+from app import app, db, User, Spot, Like, Comment, safe_next_url, ForumTopic, ForumReply, ForumNotification
 from scripts.migrate_auth_schema import migrate_user_auth_columns
 
 
@@ -278,3 +278,83 @@ def test_email_change_requires_password_and_new_address_confirmation(client):
         assert user.pending_email is None
         assert user.email_verified is True
         assert user.email_change_token_hash is None
+
+
+def test_forum_topic_reply_search_and_notifications(client):
+    with app.app_context():
+        owner = User(username='ForumOwner', email='forum-owner@example.com')
+        owner.set_password('owner-secure-password')
+        responder = User(username='ForumReplyUser', email='forum-reply@example.com')
+        responder.set_password('reply-secure-password')
+        db.session.add_all([owner, responder])
+        db.session.commit()
+        owner_id, responder_id = owner.id, responder.id
+
+    with client.session_transaction() as session:
+        session['_user_id'] = str(owner_id)
+        session['_fresh'] = True
+        session['_csrf_token'] = 'owner-csrf'
+    response = client.post('/forum', data={
+        '_csrf_token': 'owner-csrf',
+        'title': 'Отчёт о ловле окуня',
+        'category': 'Отчёты о рыбалке',
+        'body': 'Сегодня хорошо клевал окунь на небольшом заливе.',
+    }, follow_redirects=False)
+    assert response.status_code == 302
+    topic_id = int(response.headers['Location'].rstrip('/').split('/')[-1])
+
+    responder_client = app.test_client()
+    with responder_client.session_transaction() as session:
+        session['_user_id'] = str(responder_id)
+        session['_fresh'] = True
+        session['_csrf_token'] = 'responder-csrf'
+    response = responder_client.post(f'/forum/{topic_id}', data={
+        '_csrf_token': 'responder-csrf',
+        'body': 'Спасибо за отчёт! На какую приманку ловил?',
+    }, follow_redirects=False)
+    assert response.status_code == 302
+
+    with app.app_context():
+        assert ForumTopic.query.count() == 1
+        assert ForumReply.query.filter_by(topic_id=topic_id).count() == 1
+        notices = ForumNotification.query.filter_by(recipient_id=owner_id).all()
+        assert len(notices) == 1
+        assert notices[0].is_read is False
+
+    response = client.get('/forum?q=приманку')
+    assert response.status_code == 200
+    assert 'Отчёт о ловле окуня' in response.get_data(as_text=True)
+
+    response = client.get('/forum/notifications')
+    assert response.status_code == 200
+    assert 'На какую приманку' in response.get_data(as_text=True)
+
+    with app.app_context():
+        notice = ForumNotification.query.filter_by(recipient_id=owner_id).one()
+        notice_id = notice.id
+    response = client.post(f'/forum/notifications/{notice_id}/open', data={
+        '_csrf_token': 'owner-csrf',
+    }, follow_redirects=False)
+    assert response.status_code == 302
+    with app.app_context():
+        assert ForumNotification.query.filter_by(recipient_id=owner_id, is_read=False).count() == 0
+
+
+def test_forum_rejects_invalid_topic_and_reply(client):
+    with app.app_context():
+        user = User(username='ForumInvalid', email='forum-invalid@example.com')
+        user.set_password('invalid-secure-password')
+        db.session.add(user)
+        db.session.commit()
+        user_id = user.id
+    with client.session_transaction() as session:
+        session['_user_id'] = str(user_id)
+        session['_fresh'] = True
+        session['_csrf_token'] = 'forum-csrf'
+    response = client.post('/forum', data={
+        '_csrf_token': 'forum-csrf', 'title': 'bad', 'category': 'Общее', 'body': 'short'
+    }, follow_redirects=False)
+    assert response.status_code == 200
+    with app.app_context():
+        assert ForumTopic.query.count() == 0
+
