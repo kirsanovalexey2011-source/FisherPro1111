@@ -1468,8 +1468,18 @@ def recipe_detail(recipe_id):
 
 @app.route('/forum')
 def forum():
-    topics = ForumTopic.query.order_by(ForumTopic.updated_at.desc()).limit(100).all()
-    return render_template('forum.html', topics=topics, search_query='', category_filter='', categories=('Общее', 'Отчёты о рыбалке', 'Снасти и техника', 'Водоёмы и места', 'Вопросы новичков'))
+    search_query = request.args.get('q', '').strip()[:100]
+    category_filter = request.args.get('category', '').strip()
+    query = ForumTopic.query
+    if search_query:
+        pattern = f'%{search_query}%'
+        query = query.filter(db.or_(ForumTopic.title.ilike(pattern), ForumTopic.body.ilike(pattern)))
+    categories = ('Общее', 'Отчёты о рыбалке', 'Снасти и техника', 'Водоёмы и места', 'Вопросы новичков')
+    if category_filter in categories:
+        query = query.filter_by(category=category_filter)
+    topics = query.order_by(ForumTopic.updated_at.desc()).limit(100).all()
+    return render_template('forum.html', topics=topics, search_query=search_query,
+                           category_filter=category_filter, categories=categories)
 
 
 @app.route('/contacts')
