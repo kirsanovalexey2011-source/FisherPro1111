@@ -265,6 +265,44 @@
         opacity: 0;
         cursor: pointer;
     }
+
+/* Map and fishing report form refresh */
+.hero-title-container{margin:clamp(1.5rem,4vw,3rem) 0 1.5rem;text-align:left;}
+.hero-title{font-size:clamp(1.8rem,4vw,2.7rem);justify-content:flex-start;}
+.hero-subtitle{margin:.65rem 0 0;max-width:720px;color:#91aaa6;line-height:1.65;}
+.glass-card-main{padding:clamp(1rem,2vw,1.6rem);border-radius:22px;background:linear-gradient(145deg,rgba(17,42,39,.98),rgba(10,29,28,.98));border-color:rgba(120,180,165,.18);}
+.glass-card-main>.row{--bs-gutter-x:1.5rem;--bs-gutter-y:1.5rem;}
+.map-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin:0 0 1rem;}
+.map-eyebrow,.report-form-step{display:block;color:#4fd1ad;font-size:.68rem;font-weight:850;letter-spacing:.14em;}
+.map-panel-heading h2{margin:.3rem 0;color:#e7f5ef;font-size:1.2rem;font-weight:850;letter-spacing:-.03em;}
+.map-panel-heading p,.form-subtitle{margin:0;color:#91aaa6;font-size:.82rem;line-height:1.5;}
+.map-count{display:inline-flex;align-items:center;gap:.45rem;padding:.55rem .75rem;border:1px solid rgba(79,209,173,.2);border-radius:999px;background:rgba(79,209,173,.08);color:#9cebd2;font-size:.76rem;white-space:nowrap;}
+#yandex-map{height:clamp(420px,65vh,680px)!important;border-radius:16px!important;border-color:rgba(120,180,165,.22)!important;box-shadow:0 16px 40px rgba(0,0,0,.2);}
+.map-coordinate-hint{display:flex;align-items:center;gap:.5rem;margin-top:.8rem;color:#8ba9a2;font-size:.76rem;}
+.map-coordinate-hint i{color:#4fd1ad;}
+.form-wrapper{padding:clamp(1rem,2vw,1.5rem);border:1px solid rgba(120,180,165,.16);border-radius:18px;background:rgba(5,22,21,.34);}
+.form-header{text-align:left;margin-bottom:1.1rem;padding-bottom:1rem;border-bottom:1px solid rgba(120,180,165,.16);}
+.form-title-blue{font-size:1.65rem;background:linear-gradient(110deg,#e6fff5,#54d9b5);-webkit-background-clip:text;}
+.form-subtitle{margin-top:.35rem;}
+.report-form-intro{margin-bottom:1.1rem;padding:.9rem 1rem;border:1px solid rgba(79,209,173,.16);border-radius:13px;background:rgba(79,209,173,.055);}
+.report-form-intro p{margin:.35rem 0 0;color:#a9c2ba;font-size:.82rem;line-height:1.5;}
+.form-label-custom{margin-top:13px;margin-bottom:6px;color:#83d9bf;font-size:.7rem;letter-spacing:.09em;}
+.custom-input,.fish-select-trigger{min-height:44px;padding:10px 12px!important;border-radius:11px!important;background:rgba(4,17,17,.65)!important;border-color:rgba(137,179,166,.24)!important;color:#e8f5ef!important;font-size:.88rem!important;}
+.custom-input:focus,.fish-select-trigger:focus-within{border-color:#42c9a4!important;box-shadow:0 0 0 3px rgba(66,201,164,.12)!important;}
+.custom-input::placeholder{color:#6f8982!important;}
+.fish-dropdown{border-radius:12px;border-color:rgba(137,179,166,.28);background:#102724;}
+.fish-search-input{border-radius:9px;}
+.fish-option{padding:9px;border-radius:8px;}
+.fish-option:hover{background:rgba(79,209,173,.1);}
+.fish-badge{padding:4px 9px;border-radius:999px;background:rgba(28,163,129,.2);color:#9cebd2;}
+.file-upload-box{min-height:76px;display:grid;place-items:center;border-radius:12px;border-color:rgba(137,179,166,.28);background:rgba(4,17,17,.45);}
+.btn-submit-custom{min-height:48px;margin-top:1.1rem;border-radius:12px;background:linear-gradient(110deg,#16a982,#078baf);box-shadow:0 8px 22px rgba(8,145,125,.2);}
+.btn-submit-custom:hover{filter:brightness(1.08);transform:translateY(-1px);}
+.filter-bar{border-radius:14px;background:rgba(17,42,39,.8);border-color:rgba(120,180,165,.18);}
+.btn-filter-toggle{border-radius:10px;}
+@media(max-width:991.98px){#yandex-map{height:420px!important;}.form-wrapper{margin-top:.2rem;}}
+@media(max-width:575.98px){.hero-title-container{text-align:left;margin-top:1rem;}.hero-title{font-size:1.8rem;}.glass-card-main{padding:.7rem;border-radius:17px;}.map-panel-heading{align-items:flex-start;flex-direction:column;}.map-count{align-self:flex-start;}#yandex-map{height:340px!important;}.form-wrapper{padding:.9rem;border-radius:14px;}.row.g-2>[class*="col-"]{min-width:0;}}
+
 </style>
 
 <div class="container py-3">
@@ -306,7 +344,9 @@
 
             <!-- Карта -->
             <div class="col-lg-7">
-                <div id="yandex-map" style="width: 100%; height: 680px; border-radius: 10px; overflow: hidden; border: 1px solid #30363d;"></div>
+                <div class="map-panel-heading"><div><span class="map-eyebrow">КАРТА УЛОВОВ</span><h2>Выберите точку рыбалки</h2><p>Нажмите на карту — координаты заполнятся автоматически</p></div><span class="map-count"><i class="fa-solid fa-location-dot"></i> {{ reports|length }} меток</span></div>
+                <div id="yandex-map" style="width: 100%; height: 680px; border-radius: 16px; overflow: hidden; border: 1px solid #30363d;"></div>
+                <div class="map-coordinate-hint"><i class="fa-solid fa-crosshairs"></i> Точку можно перетащить, чтобы уточнить место</div>
             </div>
 
             <!-- Форма добавления отчёта -->
@@ -314,19 +354,25 @@
                 <div class="form-wrapper">
                     <div class="form-header">
                         <h3 class="form-title-blue m-0">Новый отчёт</h3>
+                        <p class="form-subtitle">Сохрани впечатления и полезные детали поездки</p>
                     </div>
 
-                    <form action="{{ url_for('add_spot') }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ url_for('add_spot') }}" method="POST" enctype="multipart/form-data" class="report-form" id="reportForm">
+                        <div class="report-form-intro">
+                            <span class="report-form-step">ВАШ УЛОВ · НОВАЯ ЗАПИСЬ</span>
+                            <p>Отметьте место на карте и расскажите, как прошла рыбалка.</p>
+                        </div>
 
                         <!-- Водоём -->
                         <div class="mb-2">
                             <label class="form-label-custom" style="margin-top: 0;">Заголовок / Водоём</label>
-                            <input type="text" name="title" class="form-control custom-input" placeholder="Например: Река Нева, у Моста" required>
+                            <input type="text" name="title" class="form-control custom-input" placeholder="Например: Вечерняя рыбалка на Неве" maxlength="200" required>
+                            <input type="hidden" name="waterbody" id="waterbody-input">
                         </div>
 
                         <!-- Выбор рыб с чекбоксами -->
                         <div class="mb-2">
-                            <label class="form-label-custom">Пойманый вид рыб</label>
+                            <label class="form-label-custom">Пойманные виды рыб</label>
                             <div class="fish-select-container">
                                 <div class="fish-select-trigger" id="fishSelectTrigger">
                                     <div id="selectedFishBadges" style="display:flex; flex-wrap:wrap; gap:4px;">
@@ -399,7 +445,7 @@
                         <!-- Описание -->
                         <div class="mb-2">
                             <label class="form-label-custom">Заметки и детали</label>
-                            <textarea name="info" class="form-control custom-input" rows="3" placeholder="Вес, глубины, условия..." required></textarea>
+                            <textarea name="info" class="form-control custom-input" rows="4" maxlength="4000" placeholder="Что сработало? Какая была погода, глубина, течение? Поделитесь деталями..." required></textarea>
                         </div>
 
                         <button type="submit" class="btn-submit-custom">
@@ -584,7 +630,7 @@
         dataList.forEach(function(report) {
             var placemark = new ymaps.Placemark([report.lat, report.lon], {
                 balloonContentHeader: `<div style="font-weight:700; color:#0f172a;">${report.title}</div>`,
-                balloonContentBody: `<div style="color:#334155;">${report.info}<br><b>Вид:</b> ${report.fish_species || 'Не указан'}<br><a href="/spot/${report.id}" style="color:#0ea5e9;">Открыть отчёт &rarr;</a></div>`,
+                balloonContentBody: `<div style="color:#334155;">${report.info}<br><b>Вид:</b> ${report.fish_species || 'Не указан'}<br>${report.url ? '<a href="' + report.url + '" style="color:#0ea5e9;">Открыть отчёт &rarr;</a>' : ''}</div>`
                 hintContent: report.title
             }, {
                 preset: 'islands#redFishingIcon'
