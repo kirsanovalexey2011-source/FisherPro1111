@@ -369,3 +369,14 @@ def test_forum_rejects_invalid_topic_and_reply(client):
     with app.app_context():
         assert ForumReply.query.filter_by(topic_id=topic_id).count() == 0
 
+
+
+def test_main_pages_render_without_server_errors(client):
+    paths = [
+        '/', '/spots', '/fishes', '/waters', '/map', '/bite-forecast',
+        '/gear-advisor', '/contacts', '/forum', '/tools',
+    ]
+    for path in paths:
+        response = client.get(path)
+        assert response.status_code == 200, f'{path} returned {response.status_code}'
+
