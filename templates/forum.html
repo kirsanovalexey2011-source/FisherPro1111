@@ -12,6 +12,7 @@
     <span class="text-xs font-bold uppercase tracking-widest text-emerald-300">Сообщество ФишЭксперт</span>
     <h1 class="mt-2 text-3xl md:text-4xl font-black text-white">Форум рыболовов</h1>
     <p class="mt-2 max-w-2xl text-sm leading-6 text-emerald-100/70">Обсуждай снасти, делись отчётами, задавай вопросы и находи советы других рыбаков.</p>
+    {% if current_user.is_authenticated %}<a href="{{ url_for('forum_notifications') }}" class="mt-4 inline-flex rounded-xl border border-emerald-700/50 px-4 py-2 text-sm text-emerald-200 no-underline">Мои уведомления</a>{% endif %}
   </header>
   <form method="get" action="{{ url_for('forum') }}" class="grid grid-cols-1 md:grid-cols-[1fr_240px_auto] gap-3 rounded-2xl border border-gray-700/60 bg-gray-900/70 p-4">
     <input type="search" name="q" value="{{ search_query or '' }}" maxlength="100" placeholder="Поиск по темам и тексту..." class="min-h-11 rounded-xl border border-gray-700 bg-gray-950 px-4 text-sm text-white">
