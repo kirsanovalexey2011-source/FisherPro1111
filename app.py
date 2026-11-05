@@ -777,8 +777,10 @@ def edit_profile():
             for error in errors:
                 flash(error, 'error')
         else:
-            current_user.bio = bio or None
-            current_user.favorite_tackle = favorite_tackle or None
+            if 'bio' in request.form:
+                current_user.bio = bio or None
+            if 'favorite_tackle' in request.form:
+                current_user.favorite_tackle = favorite_tackle or None
             if new_avatar:
                 current_user.avatar = new_avatar
             if changing_password:
