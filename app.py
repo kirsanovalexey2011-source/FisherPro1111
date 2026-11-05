@@ -6,6 +6,7 @@ import secrets
 import hmac
 import hashlib
 import smtplib
+import uuid
 from email.message import EmailMessage
 from urllib.parse import urlsplit
 from datetime import datetime
@@ -31,6 +32,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = os.environ.get('COOKIE_SECURE', '').lower() == 'true'
+app.config['MAX_CONTENT_LENGTH'] = 3 * 1024 * 1024 + 64 * 1024
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -523,6 +525,32 @@ def logout():
     return redirect(url_for('index'))
 
 
+def save_profile_avatar(upload):
+    if not upload or not upload.filename:
+        return None
+    extension = os.path.splitext(upload.filename)[1].lower()
+    allowed_signatures = {
+        '.jpg': lambda data: data.startswith(b'\xff\xd8\xff'),
+        '.jpeg': lambda data: data.startswith(b'\xff\xd8\xff'),
+        '.png': lambda data: data.startswith(b'\x89PNG\r\n\x1a\n'),
+        '.webp': lambda data: data.startswith(b'RIFF') and data[8:12] == b'WEBP',
+        '.gif': lambda data: data.startswith((b'GIF87a', b'GIF89a')),
+    }
+    validator = allowed_signatures.get(extension)
+    if not validator:
+        raise ValueError('Поддерживаются только изображения JPG, PNG, WEBP и GIF.')
+    header = upload.stream.read(12)
+    upload.stream.seek(0)
+    if not validator(header):
+        raise ValueError('Файл не похож на изображение выбранного формата.')
+    filename = f'{uuid.uuid4().hex}{extension}'
+    relative_dir = os.path.join('uploads', 'avatars')
+    absolute_dir = os.path.join(app.static_folder, relative_dir)
+    os.makedirs(absolute_dir, exist_ok=True)
+    upload.save(os.path.join(absolute_dir, filename))
+    return os.path.join(relative_dir, filename).replace(os.sep, '/')
+
+
 @app.route('/user/edit', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
@@ -530,13 +558,40 @@ def edit_profile():
         validate_csrf()
         bio = request.form.get('bio', '').strip()
         favorite_tackle = request.form.get('favorite_tackle', '').strip()
+        current_password = request.form.get('current_password', '')
+        new_password = request.form.get('new_password', '')
+        password_confirmation = request.form.get('password_confirmation', '')
+        avatar_upload = request.files.get('avatar')
+        errors = []
         if len(bio) > 1000 or len(favorite_tackle) > 100:
-            flash('Проверьте длину полей: описание до 1000 символов, любимая снасть до 100.', 'error')
+            errors.append('Описание должно быть не длиннее 1000 символов, снасть — 100 символов.')
+        changing_password = bool(current_password or new_password or password_confirmation)
+        if changing_password:
+            if not current_user.check_password(current_password):
+                errors.append('Текущий пароль указан неверно.')
+            elif not 10 <= len(new_password) <= 1024:
+                errors.append('Новый пароль должен содержать от 10 до 1024 символов.')
+            elif new_password != password_confirmation:
+                errors.append('Новый пароль и подтверждение не совпадают.')
+        try:
+            new_avatar = save_profile_avatar(avatar_upload) if avatar_upload and avatar_upload.filename else None
+        except ValueError as exc:
+            errors.append(str(exc))
+            new_avatar = None
+        if errors:
+            for error in errors:
+                flash(error, 'error')
         else:
             current_user.bio = bio or None
             current_user.favorite_tackle = favorite_tackle or None
+            if new_avatar:
+                current_user.avatar = new_avatar
+            if changing_password:
+                current_user.set_password(new_password)
+                current_user.password_reset_token_hash = None
+                current_user.password_reset_sent_at = None
             db.session.commit()
-            flash('Профиль обновлён.', 'success')
+            flash('Изменения профиля сохранены.', 'success')
             return redirect(url_for('user_profile', username=current_user.username))
     return render_template('edit_profile.html')
 
@@ -547,27 +602,18 @@ def edit_profile():
 def user_profile(username):
     user = User.query.filter_by(username=username).first_or_404()
 
-    # Загружаем отчёты пользователя с защитой от ошибок старых таблиц БД
-    db_spots = []
-    try:
-        db_spots = Spot.query.filter_by(user_id=user.id).all()
-    except Exception:
-        db.session.rollback()
-
-    total_spots = len(db_spots)
-    total_likes = 0
-    for s in db_spots:
-        try:
-            total_likes += Like.query.filter_by(spot_id=str(s.id)).count()
-        except Exception:
-            db.session.rollback()
+    # Profile statistics are calculated from existing tables; no new schema is required.
+    db_spots = Spot.query.filter_by(user_id=user.id).order_by(Spot.id.desc()).all()
+    total_likes = sum(Like.query.filter_by(spot_id=str(spot.id)).count() for spot in db_spots)
+    comments = Comment.query.filter_by(user_id=user.id).order_by(Comment.created_at.desc()).limit(10).all()
+    total_comments = Comment.query.filter_by(user_id=user.id).count()
+    total_likes_given = Like.query.filter_by(user_id=user.id).count()
 
     return render_template(
-        'profile.html',
-        profile_user=user,
-        spots=db_spots,
-        total_spots=total_spots,
-        total_likes=total_likes
+        'profile.html', profile_user=user, spots=db_spots,
+        total_spots=len(db_spots), total_likes=total_likes,
+        comments=comments, total_comments=total_comments,
+        total_likes_given=total_likes_given
     )
 
 
