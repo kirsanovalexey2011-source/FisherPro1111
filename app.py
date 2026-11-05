@@ -1132,34 +1132,6 @@ def water_detail(wb_id):
     return render_template('water_detail.html', wb=wb)
 
 
-@app.route('/tackle')
-def tackle():
-    tackle_list = load_json_file('tackle.json')
-    categories = sorted({item.get('category', 'Другое') for item in tackle_list})
-    fishing_types = sorted({item.get('fishing_type', 'Другое') for item in tackle_list})
-    fish_options = sorted({fish for item in tackle_list for fish in item.get('target_fish', [])})
-    water_types = sorted({water for item in tackle_list for water in item.get('water_types', [])})
-    methods = sorted({method for item in tackle_list for method in item.get('methods', [item.get('fishing_type', '')]) if method})
-    return render_template(
-        'tackle.html',
-        tackle_list=tackle_list,
-        categories=categories,
-        fishing_types=fishing_types,
-        fish_options=fish_options,
-        water_types=water_types,
-        methods=methods,
-    )
-
-
-@app.route('/tackle/<tackle_id>')
-def tackle_detail(tackle_id):
-    tackle_list = load_json_file('tackle.json')
-    item = next((t for t in tackle_list if str(t.get('id')) == str(tackle_id)), None)
-    if not item:
-        return "Снасть не найдена", 404
-    return render_template('tackle_detail.html', item=item)
-
-
 @app.route('/knots')
 def knots():
     return render_template('knots.html', knots=load_json_file('knots.json'))
