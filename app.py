@@ -1218,7 +1218,7 @@ def get_weather_for_location(location):
     params = {
         'latitude': coords[0], 'longitude': coords[1],
         'current': 'temperature_2m,precipitation,rain,showers,snowfall,weather_code,cloud_cover,pressure_msl,surface_pressure,wind_speed_10m',
-        'hourly': 'surface_pressure',
+        'hourly': 'pressure_msl',
         'forecast_days': 1, 'past_days': 1, 'timezone': 'auto'
     }
     weather = _fetch_weather_json('https://api.open-meteo.com/v1/forecast?' + urlencode(params))
@@ -1236,9 +1236,9 @@ def get_weather_for_location(location):
     else:
         season = 'summer' if month in (12, 1, 2) else ('autumn' if month in (3, 4, 5) else ('winter' if month in (6, 7, 8) else 'spring'))
 
-    pressure_hpa = current.get('surface_pressure') or current.get('pressure_msl')
+    pressure_hpa = current.get('pressure_msl')
     hourly = weather.get('hourly') or {}
-    times, pressures = hourly.get('time') or [], hourly.get('surface_pressure') or []
+    times, pressures = hourly.get('time') or [], hourly.get('pressure_msl') or []
     previous = []
     for stamp, pressure in zip(times, pressures):
         try:
