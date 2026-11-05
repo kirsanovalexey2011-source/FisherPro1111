@@ -206,6 +206,38 @@ class Waterbody(db.Model):
     lon = db.Column(db.Float, nullable=True)
 
 
+class ForumTopic(db.Model):
+    __tablename__ = 'forum_topics'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(140), nullable=False)
+    category = db.Column(db.String(40), nullable=False, default='Общее')
+    body = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    is_locked = db.Column(db.Boolean, default=False, nullable=False)
+    replies = db.relationship('ForumReply', backref='topic', lazy='dynamic', cascade='all, delete-orphan')
+
+
+class ForumReply(db.Model):
+    __tablename__ = 'forum_replies'
+    id = db.Column(db.Integer, primary_key=True)
+    topic_id = db.Column(db.Integer, db.ForeignKey('forum_topics.id'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+
+class ForumNotification(db.Model):
+    __tablename__ = 'forum_notifications'
+    id = db.Column(db.Integer, primary_key=True)
+    recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    topic_id = db.Column(db.Integer, db.ForeignKey('forum_topics.id'), nullable=False)
+    reply_id = db.Column(db.Integer, db.ForeignKey('forum_replies.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    is_read = db.Column(db.Boolean, default=False, nullable=False)
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
