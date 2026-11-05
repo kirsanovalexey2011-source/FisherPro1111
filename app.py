@@ -1624,43 +1624,83 @@ def bite_forecast():
 
 @app.route('/gear-advisor', methods=['GET', 'POST'])
 def gear_advisor():
-    """Подбор снастей по выбранной целевой рыбе на основе локального каталога."""
+    """Подбирает снасти по виду рыбы и выбранному способу ловли."""
     fishes_data = load_json_file('fishes.json')
-    tackle_data = load_json_file('tackle.json')
+    gear_data = load_json_file('gear_recommendations.json') or {}
     selected_fish_id = (request.values.get('fish') or '').strip()
+    selected_method = (request.values.get('method') or '').strip().lower()
     selected_fish = next(
         (item for item in fishes_data if str(item.get('id')) == selected_fish_id),
         None
     )
     recommendations = []
+    restriction_note = None
+    method_note = None
+    source_note = None
+    method_options = [
+        ('', 'Любой способ'),
+        ('spinning', 'Спиннинг'),
+        ('float', 'Поплавочная ловля'),
+        ('feeder', 'Фидер'),
+        ('bottom', 'Донная ловля'),
+        ('fly', 'Нахлыст'),
+        ('ice', 'Зимняя ловля'),
+    ]
 
     if selected_fish:
-        fish_name = str(selected_fish.get('name') or '').strip().casefold()
-        for item in tackle_data:
-            target_fish = item.get('target_fish') or []
-            if isinstance(target_fish, str):
-                target_fish = [target_fish]
-            if any(fish_name == str(target).strip().casefold() for target in target_fish):
-                recommendations.append(item)
+        fish_id = str(selected_fish.get('id') or '')
+        family = str(selected_fish.get('family') or '')
+        restricted_ids = set(gear_data.get('restricted_ids') or [])
+        restricted_families = set(gear_data.get('restricted_families') or [])
 
-        # Если в каталоге нет точного совпадения, показываем подходы из карточки рыбы.
-        if not recommendations:
-            fish_tackle = selected_fish.get('tackle') or ''
-            fish_baits = selected_fish.get('baits') or ''
-            recommendations.append({
-                'id': None,
-                'title': 'Рекомендации из энциклопедии рыб',
-                'category': 'Базовый комплект',
-                'fishing_type': selected_fish.get('methods') or 'Уточните способ ловли',
-                'description': 'В каталоге пока нет снастей с точным совпадением по этому виду. Используйте рекомендации ниже как отправную точку.',
-                'tips': 'Рекомендуемые снасти: ' + str(fish_tackle) + '. Приманки и наживки: ' + str(fish_baits) + '.'
-            })
+        if fish_id in restricted_ids or family in restricted_families:
+            restriction_note = (
+                'Для этого вида не показываем снасти для целевой ловли: он может иметь '
+                'особый охранный статус или ограничения. Перед любой рыбалкой проверьте '
+                'актуальные правила, Красную книгу и запреты именно вашего региона.'
+            )
+        else:
+            species_profiles = gear_data.get('species') or {}
+            family_profiles = gear_data.get('family_defaults') or {}
+            recommendations = species_profiles.get(fish_id) or family_profiles.get(family) or []
+            source_note = (
+                'Подбор по конкретному виду рыбы.'
+                if species_profiles.get(fish_id)
+                else 'Подбор по семейству рыбы: используйте его как отправную точку и уточняйте оснастку под водоём.'
+                if recommendations
+                else 'Для этого вида пока нет проверенного профиля. Не будем подставлять случайную снасть.'
+            )
+
+            method_keywords = {
+                'spinning': ('спиннинг', 'ультралайт', 'джиг'),
+                'float': ('поплав', 'проводк'),
+                'feeder': ('фидер',),
+                'bottom': ('донн', 'карфишинг'),
+                'fly': ('нахлыст',),
+                'ice': ('зимн', 'лёд', 'лед'),
+            }
+            if selected_method and recommendations:
+                keywords = method_keywords.get(selected_method, ())
+                matching = [
+                    item for item in recommendations
+                    if any(word in str(item.get('fishing_type') or '').casefold() for word in keywords)
+                ]
+                if matching:
+                    recommendations = matching
+                else:
+                    recommendations = []
+                    method_note = 'Для выбранного вида в справочнике пока нет комплекта с таким способом ловли. Выберите «Любой способ» или другой вариант.'
 
     return render_template(
         'gear_advisor.html',
         fishes=fishes_data,
         selected_fish=selected_fish,
-        recommendations=recommendations
+        recommendations=recommendations,
+        selected_method=selected_method,
+        method_options=method_options,
+        restriction_note=restriction_note,
+        method_note=method_note,
+        source_note=source_note
     )
 
 
