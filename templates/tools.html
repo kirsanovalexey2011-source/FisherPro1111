@@ -42,30 +42,6 @@
 </div>
 
 <script>
-function calculateBite() {
-    const temp = parseFloat(document.getElementById('temp').value);
-    const press = parseFloat(document.getElementById('pressure').value);
-    const wind = parseFloat(document.getElementById('wind').value);
-
-    let score = 70;
-    if (press < 735 || press > 755) score -= 25;
-    if (wind > 8) score -= 30;
-    if (temp < 5 || temp > 28) score -= 20;
-
-    score = Math.max(10, Math.min(100, score));
-
-    const res = document.getElementById('bite-result');
-    const scoreEl = document.getElementById('bite-score');
-    const descEl = document.getElementById('bite-desc');
-
-    res.classList.remove('hidden');
-    scoreEl.innerText = `Вероятность активного клёва: ${score}%`;
-
-    if(score >= 70) descEl.innerText = 'Отличные условия! Рыба активна, стоит отправляться на водоем.';
-    else if(score >= 40) descEl.innerText = 'Умеренный клёв. Потребуется поэкспериментировать с насадками.';
-    else descEl.innerText = 'Низкая активность из-за неблагоприятных погодных факторов.';
-}
-
 function calculateLine() {
     const weight = parseFloat(document.getElementById('fish-weight').value);
     const coeff = parseFloat(document.getElementById('fishing-type').value);
