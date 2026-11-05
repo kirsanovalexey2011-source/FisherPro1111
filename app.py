@@ -1107,7 +1107,7 @@ def add_spot():
 
     description = notes[:4000]
     if details:
-        description += '\\n\\n' + '\\n'.join(details)
+        description += '\n\n' + '\n'.join(details)
     if photos:
         description += PHOTO_METADATA_MARKER + json.dumps(photos, ensure_ascii=False) + PHOTO_METADATA_END
 
