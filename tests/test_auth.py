@@ -121,7 +121,7 @@ def test_additive_migration_preserves_legacy_user_data():
 
         inspector = inspect(engine)
         columns = {column['name']: column for column in inspector.get_columns('users')}
-        assert {'password_hash', 'password_reset_token_hash', 'password_reset_sent_at'} <= set(columns)
+        assert {'password_hash', 'password_reset_token_hash', 'password_reset_sent_at', 'email_verified', 'email_verification_token_hash', 'email_verification_sent_at', 'pending_email', 'email_change_token_hash', 'email_change_sent_at'} <= set(columns)
         assert columns['password_hash']['nullable'] is True
 
         with engine.connect() as connection:
@@ -197,3 +197,81 @@ def test_avatar_upload_accepts_image_signature_and_rejects_fake_image(client, tm
     invalid = FileStorage(stream=BytesIO(b'not-an-image'), filename='avatar.png')
     with pytest.raises(ValueError):
         save_profile_avatar(invalid)
+
+
+
+def test_email_verification_link_is_one_time(client):
+    captured = {}
+    with patch('app.send_email_verification', side_effect=lambda user, token: captured.update(token=token)):
+        response = client.get('/register')
+        token = csrf_token(response)
+        response = client.post('/register', data={
+            '_csrf_token': token,
+            'username': 'VerifyAngler',
+            'email': 'verify@example.com',
+            'password': 'a-strong-password-123',
+        }, follow_redirects=False)
+        assert response.status_code == 302
+
+    verify_token = captured['token']
+    response = client.get('/verify-email/' + verify_token, follow_redirects=False)
+    assert response.status_code == 302
+    with app.app_context():
+        user = User.query.filter_by(username='VerifyAngler').one()
+        assert user.email_verified is True
+        assert user.email_verification_token_hash is None
+
+    response = client.get('/verify-email/' + verify_token, follow_redirects=False)
+    assert response.status_code == 302
+    with app.app_context():
+        user = User.query.filter_by(username='VerifyAngler').one()
+        assert user.email_verified is True
+
+
+def test_email_change_requires_password_and_new_address_confirmation(client):
+    captured = {}
+    with patch('app.send_email_verification'):
+        response = client.get('/register')
+        token = csrf_token(response)
+        response = client.post('/register', data={
+            '_csrf_token': token,
+            'username': 'ChangeAngler',
+            'email': 'before@example.com',
+            'password': 'a-strong-password-123',
+        }, follow_redirects=False)
+        assert response.status_code == 302
+
+    response = client.get('/user/edit')
+    token = csrf_token(response)
+    response = client.post('/user/email/change', data={
+        '_csrf_token': token,
+        'new_email': 'after@example.com',
+        'current_password_for_email': 'wrong-password',
+    }, follow_redirects=False)
+    assert response.status_code == 302
+    with app.app_context():
+        user = User.query.filter_by(username='ChangeAngler').one()
+        assert user.email == 'before@example.com'
+        assert user.pending_email is None
+
+    with patch('app.send_email_change_confirmation', side_effect=lambda user, token: captured.update(token=token)):
+        response = client.post('/user/email/change', data={
+            '_csrf_token': token,
+            'new_email': 'after@example.com',
+            'current_password_for_email': 'a-strong-password-123',
+        }, follow_redirects=False)
+        assert response.status_code == 302
+
+    with app.app_context():
+        user = User.query.filter_by(username='ChangeAngler').one()
+        assert user.email == 'before@example.com'
+        assert user.pending_email == 'after@example.com'
+
+    response = client.get('/confirm-email-change/' + captured['token'], follow_redirects=False)
+    assert response.status_code == 302
+    with app.app_context():
+        user = User.query.filter_by(username='ChangeAngler').one()
+        assert user.email == 'after@example.com'
+        assert user.pending_email is None
+        assert user.email_verified is True
+        assert user.email_change_token_hash is None
