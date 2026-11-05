@@ -1875,6 +1875,9 @@ def gear_advisor():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        # Не допускаем повторных уведомлений об одном и том же ответе.
+        with db.engine.begin() as connection:
+            connection.exec_driver_sql('CREATE UNIQUE INDEX IF NOT EXISTS uq_forum_notification_recipient_reply ON forum_notifications (recipient_id, reply_id)')
         # Безопасная additive-миграция: добавляет только nullable-столбец.
         # Существующие пользователи и данные не удаляются и не перезаписываются.
         user_columns = {column['name'] for column in inspect(db.engine).get_columns('users')}
