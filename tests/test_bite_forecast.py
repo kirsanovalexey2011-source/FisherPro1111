@@ -84,12 +84,12 @@ def test_weather_lookup_returns_local_time_and_weather(monkeypatch):
             'time': now.isoformat(), 'temperature_2m': 12.5,
             'precipitation': 0.2, 'rain': 0.2, 'showers': 0,
             'snowfall': 0, 'weather_code': 3, 'cloud_cover': 60,
-            'pressure_msl': 1015, 'surface_pressure': 1008,
+            'pressure_msl': 1008,
             'wind_speed_10m': 10.8
         },
         'hourly': {
             'time': [previous.isoformat(), now.isoformat()],
-            'surface_pressure': [1004, 1008]
+            'pressure_msl': [1004, 1008]
         }
     }
     monkeypatch.setattr('app._fetch_weather_json', lambda url: payload)
