@@ -194,6 +194,15 @@ class Waterbody(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
+    type = db.Column(db.String(50), nullable=True)
+    region = db.Column(db.String(255), nullable=True)
+    location = db.Column(db.String(255), nullable=True)
+    fishes_json = db.Column(db.Text, nullable=True)
+    methods = db.Column(db.Text, nullable=True)
+    features = db.Column(db.Text, nullable=True)
+    images_json = db.Column(db.Text, nullable=True)
+    lat = db.Column(db.Float, nullable=True)
+    lon = db.Column(db.Float, nullable=True)
 
 
 @login_manager.user_loader
@@ -1299,17 +1308,82 @@ def fish_detail(fish_id):
     return render_template('fish_detail.html', fish=fish, family_names=FAMILY_TRANSLATIONS)
 
 
+def waterbody_to_dict(item):
+    try:
+        fishes = json.loads(item.fishes_json or '[]')
+    except (ValueError, TypeError):
+        fishes = []
+    try:
+        images = json.loads(item.images_json or '[]')
+    except (ValueError, TypeError):
+        images = []
+    return {
+        'id': f'db-{item.id}',
+        'name': item.name,
+        'type': item.type or 'Водоём',
+        'region': item.region or '',
+        'location': item.location or item.region or '',
+        'description': item.description or '',
+        'fishes': fishes if isinstance(fishes, list) else [],
+        'methods': item.methods or '',
+        'features': item.features or '',
+        'images': images if isinstance(images, list) else [],
+        'image': (images[0] if isinstance(images, list) and images else ''),
+        'lat': item.lat,
+        'lon': item.lon
+    }
+
+
 @app.route('/waters')
 @app.route('/water')
 def waters():
-    wb = load_json_file('waterbodies.json')
-    return render_template('waters.html', waterbodies=wb)
+    search_query = request.args.get('search', '').strip().casefold()
+    selected_region = request.args.get('region', '').strip()
+    selected_fish = request.args.get('fish', '').strip()
+    selected_type = request.args.get('type', '').strip()
+
+    records = [waterbody_to_dict(item) for item in Waterbody.query.order_by(Waterbody.region, Waterbody.name).all()]
+    if not records:
+        records = load_json_file('waterbodies.json')
+
+    filtered = []
+    for item in records:
+        haystack = ' '.join((item.get('name', ''), item.get('region', ''), item.get('location', ''),
+                             item.get('description', ''))).casefold()
+        if search_query and search_query not in haystack:
+            continue
+        if selected_region and item.get('region') != selected_region:
+            continue
+        if selected_fish and selected_fish not in (item.get('fishes') or []):
+            continue
+        if selected_type and item.get('type') != selected_type:
+            continue
+        filtered.append(item)
+
+    regions = sorted({item.get('region', '') for item in records if item.get('region')})
+    fishes = sorted({fish for item in records for fish in (item.get('fishes') or [])})
+    types = sorted({item.get('type', '') for item in records if item.get('type')})
+    return render_template(
+        'waters.html', waterbodies=filtered, regions=regions, fishes=fishes, types=types,
+        selected_search=search_query, selected_region=selected_region,
+        selected_fish=selected_fish, selected_type=selected_type,
+        total_waterbodies=len(records)
+    )
 
 
 @app.route('/water/<wb_id>')
 def water_detail(wb_id):
-    wb_list = load_json_file('waterbodies.json')
-    wb = next((item for item in wb_list if str(item.get("id")) == str(wb_id)), None)
+    wb = None
+    if str(wb_id).startswith('db-'):
+        try:
+            database_id = int(str(wb_id)[3:])
+        except ValueError:
+            abort(404)
+        database_item = db.session.get(Waterbody, database_id)
+        wb = waterbody_to_dict(database_item) if database_item else None
+    else:
+        wb = next((item for item in load_json_file('waterbodies.json')
+                   if str(item.get('id')) == str(wb_id)), None)
     if not wb:
         return "Водоём не найден", 404
     return render_template('water_detail.html', wb=wb)
@@ -1596,4 +1670,64 @@ if __name__ == '__main__':
                     connection.exec_driver_sql(
                         f'ALTER TABLE users ADD COLUMN {column_name} {column_type}'
                     )
+
+        # Additive migration for the waterbody catalogue. Existing rows are retained.
+        waterbody_columns = {column['name'] for column in inspect(db.engine).get_columns('waterbodies')}
+        waterbody_additions = {
+            'type': 'VARCHAR(50)', 'region': 'VARCHAR(255)', 'location': 'VARCHAR(255)',
+            'fishes_json': 'TEXT', 'methods': 'TEXT', 'features': 'TEXT',
+            'images_json': 'TEXT', 'lat': 'FLOAT', 'lon': 'FLOAT'
+        }
+        with db.engine.begin() as connection:
+            for column_name, column_type in waterbody_additions.items():
+                if column_name not in waterbody_columns:
+                    connection.exec_driver_sql(
+                        f'ALTER TABLE waterbodies ADD COLUMN {column_name} {column_type}'
+                    )
+
+        # Seed only missing names; existing catalogue rows and user reports are not deleted.
+        seed_records = load_json_file('waterbodies.json') + load_json_file('waterbodies_catalog.json')
+        for record in seed_records:
+            name = str(record.get('name') or '').strip()
+            if not name:
+                continue
+            existing = Waterbody.query.filter(db.func.lower(Waterbody.name) == name.casefold()).first()
+            images = record.get('images') or ([record.get('image')] if record.get('image') else [])
+            if existing:
+                # Fill only blank fields so a previously edited record is never overwritten.
+                if not existing.description and record.get('description'):
+                    existing.description = record['description']
+                if not existing.type and record.get('type'):
+                    existing.type = record['type']
+                if not existing.region and record.get('region'):
+                    existing.region = record['region']
+                if not existing.location and record.get('location'):
+                    existing.location = record['location']
+                if not existing.fishes_json and record.get('fishes'):
+                    existing.fishes_json = json.dumps(record['fishes'], ensure_ascii=False)
+                if not existing.methods and record.get('methods'):
+                    existing.methods = record['methods']
+                if not existing.features and record.get('features'):
+                    existing.features = record['features']
+                if not existing.images_json and images:
+                    existing.images_json = json.dumps(images, ensure_ascii=False)
+                if existing.lat is None and record.get('lat') is not None:
+                    existing.lat = record['lat']
+                if existing.lon is None and record.get('lon') is not None:
+                    existing.lon = record['lon']
+                continue
+            db.session.add(Waterbody(
+                name=name[:100],
+                description=record.get('description', ''),
+                type=record.get('type', 'Водоём'),
+                region=record.get('region', ''),
+                location=record.get('location', record.get('region', '')),
+                fishes_json=json.dumps(record.get('fishes') or [], ensure_ascii=False),
+                methods=record.get('methods', ''),
+                features=record.get('features', ''),
+                images_json=json.dumps(images, ensure_ascii=False),
+                lat=record.get('lat'),
+                lon=record.get('lon')
+            ))
+        db.session.commit()
     app.run(debug=True)
