@@ -1709,6 +1709,16 @@ if __name__ == '__main__':
                 existing = Waterbody.query.filter_by(name='Река Стрелка').first()
                 if existing:
                     existing.name = name[:100]
+                    existing.type = record.get('type', existing.type)
+                    existing.region = record.get('region', existing.region)
+                    existing.location = record.get('location', existing.location)
+                    existing.description = record.get('description', existing.description)
+                    existing.fishes_json = json.dumps(record.get('fishes') or [], ensure_ascii=False)
+                    existing.methods = record.get('methods', existing.methods)
+                    existing.features = record.get('features', existing.features)
+                    existing.regions_json = json.dumps(record.get('regions') or [], ensure_ascii=False)
+                    existing.lat = record.get('lat')
+                    existing.lon = record.get('lon')
             images = record.get('images') or ([record.get('image')] if record.get('image') else [])
             if existing:
                 # Fill only blank fields so a previously edited record is never overwritten.
