@@ -1015,8 +1015,8 @@ def database_spot_to_dict(spot):
         'date': metadata.get('Дата ловли', ''),
         'lat': spot.lat,
         'lon': spot.lon,
-        'images': images,
-        'cover_image': images[0] if images else None
+        'images': [url_for('static', filename=path) for path in images],
+        'cover_image': url_for('static', filename=images[0]) if images else None
     }
 
 
