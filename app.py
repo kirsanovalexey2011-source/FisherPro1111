@@ -120,6 +120,12 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=True)
     password_reset_token_hash = db.Column(db.String(64), nullable=True)
     password_reset_sent_at = db.Column(db.DateTime, nullable=True)
+    email_verified = db.Column(db.Boolean, nullable=True, default=False)
+    email_verification_token_hash = db.Column(db.String(64), nullable=True)
+    email_verification_sent_at = db.Column(db.DateTime, nullable=True)
+    pending_email = db.Column(db.String(120), nullable=True)
+    email_change_token_hash = db.Column(db.String(64), nullable=True)
+    email_change_sent_at = db.Column(db.DateTime, nullable=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -381,7 +387,13 @@ def register():
                 flash('Пользователь с таким именем или email уже существует.', 'error')
             else:
                 login_user(user)
-                flash('Аккаунт создан. Добро пожаловать!', 'success')
+                try:
+                    verification_token = make_one_time_email_token(user, 'verify')
+                    send_email_verification(user, verification_token)
+                    flash('Аккаунт создан. Проверьте почту и подтвердите адрес.', 'success')
+                except Exception:
+                    app.logger.exception('Could not send registration verification email')
+                    flash('Аккаунт создан, но письмо подтверждения отправить не удалось. Его можно запросить в настройках профиля.', 'info')
                 return redirect(url_for('user_profile', username=user.username))
     return render_template('auth.html', mode='register')
 
@@ -516,6 +528,189 @@ def reset_password(token):
     return render_template('reset_password.html')
 
 
+
+
+def make_email_serializer():
+    return URLSafeTimedSerializer(app.config['SECRET_KEY'], salt='fish-expert-email-confirm-v1')
+
+
+def make_one_time_email_token(user, purpose):
+    nonce = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(nonce.encode('utf-8')).hexdigest()
+    if purpose == 'verify':
+        user.email_verification_token_hash = token_hash
+        user.email_verification_sent_at = datetime.utcnow()
+    elif purpose == 'change':
+        user.email_change_token_hash = token_hash
+        user.email_change_sent_at = datetime.utcnow()
+    else:
+        raise ValueError('Unknown email token purpose')
+    db.session.commit()
+    return make_email_serializer().dumps({'user_id': user.id, 'nonce': nonce, 'purpose': purpose})
+
+
+def send_account_email(recipient, subject, body):
+    host = os.environ.get('SMTP_HOST')
+    sender = os.environ.get('SMTP_FROM') or os.environ.get('SMTP_USER')
+    if not host or not sender:
+        raise RuntimeError('SMTP is not configured')
+    public_base_url = os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')
+    parsed = urlsplit(public_base_url)
+    if (parsed.scheme not in ('https', 'http') or not parsed.netloc or parsed.username or parsed.password
+            or (parsed.scheme == 'http' and parsed.hostname not in ('localhost', '127.0.0.1'))):
+        raise RuntimeError('PUBLIC_BASE_URL must be a valid HTTPS URL')
+    message = EmailMessage()
+    message['Subject'] = subject
+    message['From'] = sender
+    message['To'] = recipient
+    message.set_content(body)
+    username = os.environ.get('SMTP_USER')
+    password = os.environ.get('SMTP_PASSWORD')
+    port = int(os.environ.get('SMTP_PORT', '587'))
+    if port == 465:
+        with smtplib.SMTP_SSL(host, port, timeout=15) as smtp:
+            if username and password:
+                smtp.login(username, password)
+            smtp.send_message(message)
+    else:
+        with smtplib.SMTP(host, port, timeout=15) as smtp:
+            smtp.starttls()
+            if username and password:
+                smtp.login(username, password)
+            smtp.send_message(message)
+
+
+def send_email_verification(user, token):
+    link = os.environ.get('PUBLIC_BASE_URL', '').rstrip('/') + url_for('verify_email', token=token)
+    send_account_email(
+        user.email, 'Подтверждение почты — ФишЭксперт',
+        'Чтобы подтвердить адрес электронной почты, откройте ссылку (действует 24 часа):\\n'
+        + link + '\\nЕсли вы не создавали аккаунт, проигнорируйте это письмо.'
+    )
+
+
+def send_email_change_confirmation(user, token):
+    link = os.environ.get('PUBLIC_BASE_URL', '').rstrip('/') + url_for('confirm_email_change', token=token)
+    send_account_email(
+        user.pending_email, 'Подтверждение нового адреса — ФишЭксперт',
+        'Чтобы подтвердить новый адрес электронной почты, откройте ссылку (действует 24 часа):\\n'
+        + link + '\\nЕсли вы не запрашивали смену адреса, проигнорируйте это письмо.'
+    )
+
+
+def get_email_token_user(token, purpose):
+    try:
+        payload = make_email_serializer().loads(token, max_age=86400)
+    except (BadSignature, SignatureExpired):
+        return None
+    if not isinstance(payload, dict) or payload.get('purpose') != purpose:
+        return None
+    user = db.session.get(User, payload.get('user_id'))
+    if not user or not payload.get('nonce'):
+        return None
+    nonce_hash = hashlib.sha256(payload['nonce'].encode('utf-8')).hexdigest()
+    stored = user.email_verification_token_hash if purpose == 'verify' else user.email_change_token_hash
+    if not stored or not hmac.compare_digest(stored, nonce_hash):
+        return None
+    return user
+
+
+@app.route('/verify-email/<token>')
+def verify_email(token):
+    user = get_email_token_user(token, 'verify')
+    if not user:
+        flash('Ссылка подтверждения недействительна или устарела. Запросите новую в настройках профиля.', 'error')
+    else:
+        user.email_verified = True
+        user.email_verification_token_hash = None
+        user.email_verification_sent_at = None
+        db.session.commit()
+        flash('Электронная почта успешно подтверждена.', 'success')
+    if current_user.is_authenticated:
+        return redirect(url_for('edit_profile'))
+    return redirect(url_for('login'))
+
+
+@app.route('/user/email/resend', methods=['POST'])
+@login_required
+def resend_email_verification():
+    validate_csrf()
+    if current_user.email_verified:
+        flash('Электронная почта уже подтверждена.', 'info')
+    elif current_user.email_verification_sent_at and (datetime.utcnow() - current_user.email_verification_sent_at).total_seconds() < 60:
+        flash('Повторное письмо можно запросить через минуту.', 'error')
+    else:
+        token = make_one_time_email_token(current_user, 'verify')
+        try:
+            send_email_verification(current_user, token)
+            flash('Письмо для подтверждения отправлено.', 'success')
+        except Exception:
+            app.logger.exception('Could not send email verification')
+            current_user.email_verification_token_hash = None
+            current_user.email_verification_sent_at = None
+            db.session.commit()
+            flash('Не удалось отправить письмо. Проверьте настройки почтового сервера.', 'error')
+    return redirect(url_for('edit_profile'))
+
+
+@app.route('/user/email/change', methods=['POST'])
+@login_required
+def request_email_change():
+    validate_csrf()
+    new_email = request.form.get('new_email', '').strip().lower()
+    password = request.form.get('current_password_for_email', '')
+    if not current_user.check_password(password):
+        flash('Для смены почты укажите верный текущий пароль.', 'error')
+    elif not re.fullmatch(r'[^\\s@]+@[^\\s@]+\\.[^\\s@]+', new_email) or len(new_email) > 120:
+        flash('Укажите корректный новый адрес электронной почты.', 'error')
+    elif new_email == current_user.email.lower():
+        flash('Это уже адрес, указанный в аккаунте.', 'info')
+    elif User.query.filter(db.func.lower(User.email) == new_email).first():
+        flash('Этот адрес уже используется другим аккаунтом.', 'error')
+    elif current_user.email_change_sent_at and (datetime.utcnow() - current_user.email_change_sent_at).total_seconds() < 60:
+        flash('Повторный запрос смены почты можно отправить через минуту.', 'error')
+    else:
+        current_user.pending_email = new_email
+        token = make_one_time_email_token(current_user, 'change')
+        try:
+            send_email_change_confirmation(current_user, token)
+            flash('Отправили письмо на новый адрес. Он изменится после подтверждения ссылки.', 'success')
+        except Exception:
+            app.logger.exception('Could not send email change confirmation')
+            current_user.pending_email = None
+            current_user.email_change_token_hash = None
+            current_user.email_change_sent_at = None
+            db.session.commit()
+            flash('Не удалось отправить письмо. Проверьте настройки почтового сервера.', 'error')
+    return redirect(url_for('edit_profile'))
+
+
+@app.route('/confirm-email-change/<token>')
+def confirm_email_change(token):
+    user = get_email_token_user(token, 'change')
+    if not user or not user.pending_email:
+        flash('Ссылка смены адреса недействительна или устарела.', 'error')
+    elif User.query.filter(db.func.lower(User.email) == user.pending_email.lower()).filter(User.id != user.id).first():
+        user.pending_email = None
+        user.email_change_token_hash = None
+        user.email_change_sent_at = None
+        db.session.commit()
+        flash('Этот адрес уже занят другим аккаунтом. Запросите смену адреса заново.', 'error')
+    else:
+        user.email = user.pending_email
+        user.pending_email = None
+        user.email_verified = True
+        user.email_change_token_hash = None
+        user.email_change_sent_at = None
+        user.email_verification_token_hash = None
+        user.email_verification_sent_at = None
+        db.session.commit()
+        flash('Адрес электронной почты успешно изменён и подтверждён.', 'success')
+    if current_user.is_authenticated and current_user.id == (user.id if user else None):
+        return redirect(url_for('edit_profile'))
+    return redirect(url_for('login'))
+
+
 @app.route('/logout', methods=['POST'])
 @login_required
 def logout():
@@ -608,12 +803,19 @@ def user_profile(username):
     comments = Comment.query.filter_by(user_id=user.id).order_by(Comment.created_at.desc()).limit(10).all()
     total_comments = Comment.query.filter_by(user_id=user.id).count()
     total_likes_given = Like.query.filter_by(user_id=user.id).count()
+    caught_fish = [spot.fish_caught.strip() for spot in db_spots if spot.fish_caught and spot.fish_caught.strip()]
+    total_fish_reports = len(caught_fish)
+    fish_variety = len({fish.casefold() for fish in caught_fish})
+    waterbody_variety = len({spot.waterbody.strip().casefold() for spot in db_spots if spot.waterbody and spot.waterbody.strip()})
 
     return render_template(
         'profile.html', profile_user=user, spots=db_spots,
         total_spots=len(db_spots), total_likes=total_likes,
         comments=comments, total_comments=total_comments,
-        total_likes_given=total_likes_given
+        total_likes_given=total_likes_given,
+        total_fish_reports=total_fish_reports,
+        fish_variety=fish_variety,
+        waterbody_variety=waterbody_variety
     )
 
 
@@ -1032,6 +1234,12 @@ if __name__ == '__main__':
             'password_hash': 'VARCHAR(255)',
             'password_reset_token_hash': 'VARCHAR(64)',
             'password_reset_sent_at': 'DATETIME',
+            'email_verified': 'BOOLEAN',
+            'email_verification_token_hash': 'VARCHAR(64)',
+            'email_verification_sent_at': 'DATETIME',
+            'pending_email': 'VARCHAR(120)',
+            'email_change_token_hash': 'VARCHAR(64)',
+            'email_change_sent_at': 'DATETIME',
         }
         with db.engine.begin() as connection:
             for column_name, column_type in additive_columns.items():
