@@ -41,6 +41,7 @@
                     <a href="{{ url_for('map_page') }}" class="fe-nav-link">Карта</a>
                     <a href="{{ url_for('waters') }}" class="fe-nav-link">Водоёмы</a>
                     <a href="{{ url_for('forum') }}" class="fe-nav-link">Форум</a>
+                    {% if current_user.is_authenticated %}<a href="{{ url_for('forum_notifications') }}" class="fe-nav-link">Уведомления</a>{% endif %}
                     <a href="{{ url_for('knots') }}" class="fe-nav-link">Узлы</a>
                     <a href="{{ url_for('recipes') }}" class="fe-nav-link">Кухня</a>
                     <a href="{{ url_for('tools') }}" class="fe-nav-link">Инструменты</a>
