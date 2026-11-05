@@ -196,6 +196,7 @@ class Waterbody(db.Model):
     description = db.Column(db.Text, nullable=True)
     type = db.Column(db.String(50), nullable=True)
     region = db.Column(db.String(255), nullable=True)
+    regions_json = db.Column(db.Text, nullable=True)
     location = db.Column(db.String(255), nullable=True)
     fishes_json = db.Column(db.Text, nullable=True)
     methods = db.Column(db.Text, nullable=True)
@@ -1317,11 +1318,19 @@ def waterbody_to_dict(item):
         images = json.loads(item.images_json or '[]')
     except (ValueError, TypeError):
         images = []
+    try:
+        regions = json.loads(item.regions_json or '[]')
+    except (ValueError, TypeError):
+        regions = []
+    if not isinstance(regions, list) or not regions:
+        regions = [item.region] if item.region else []
+    regions = [str(region).strip() for region in regions if str(region).strip()]
     return {
         'id': f'db-{item.id}',
         'name': item.name,
         'type': item.type or 'Водоём',
-        'region': item.region or '',
+        'region': ' · '.join(regions) or item.region or '',
+        'regions': regions,
         'location': item.location or item.region or '',
         'description': item.description or '',
         'fishes': fishes if isinstance(fishes, list) else [],
@@ -1349,11 +1358,12 @@ def waters():
 
     filtered = []
     for item in records:
-        haystack = ' '.join((item.get('name', ''), item.get('region', ''), item.get('location', ''),
-                             item.get('description', ''))).casefold()
+        item_regions = item.get('regions') or ([item.get('region')] if item.get('region') else [])
+        haystack = ' '.join([item.get('name', ''), item.get('region', ''), item.get('location', ''),
+                             item.get('description', '')] + item_regions).casefold()
         if search_query and search_query not in haystack:
             continue
-        if selected_region and item.get('region') != selected_region:
+        if selected_region and selected_region not in item_regions:
             continue
         if selected_fish and selected_fish not in (item.get('fishes') or []):
             continue
@@ -1361,7 +1371,8 @@ def waters():
             continue
         filtered.append(item)
 
-    regions = sorted({item.get('region', '') for item in records if item.get('region')})
+    regions = sorted({region for item in records
+                      for region in (item.get('regions') or ([item.get('region')] if item.get('region') else []))})
     fishes = sorted({fish for item in records for fish in (item.get('fishes') or [])})
     types = sorted({item.get('type', '') for item in records if item.get('type')})
     return render_template(
@@ -1675,7 +1686,7 @@ if __name__ == '__main__':
         # Additive migration for the waterbody catalogue. Existing rows are retained.
         waterbody_columns = {column['name'] for column in inspect(db.engine).get_columns('waterbodies')}
         waterbody_additions = {
-            'type': 'VARCHAR(50)', 'region': 'VARCHAR(255)', 'location': 'VARCHAR(255)',
+            'type': 'VARCHAR(50)', 'region': 'VARCHAR(255)', 'regions_json': 'TEXT', 'location': 'VARCHAR(255)',
             'fishes_json': 'TEXT', 'methods': 'TEXT', 'features': 'TEXT',
             'images_json': 'TEXT', 'lat': 'FLOAT', 'lon': 'FLOAT'
         }
@@ -1693,6 +1704,11 @@ if __name__ == '__main__':
             if not name:
                 continue
             existing = Waterbody.query.filter_by(name=name).first()
+            if record.get('id') == 'strelka-lenoblast' and not existing:
+                # Correct the earlier catalog typo in-place without losing the existing row ID.
+                existing = Waterbody.query.filter_by(name='Река Стрелка').first()
+                if existing:
+                    existing.name = name[:100]
             images = record.get('images') or ([record.get('image')] if record.get('image') else [])
             if existing:
                 # Fill only blank fields so a previously edited record is never overwritten.
@@ -1702,6 +1718,8 @@ if __name__ == '__main__':
                     existing.type = record['type']
                 if not existing.region and record.get('region'):
                     existing.region = record['region']
+                if not existing.regions_json and record.get('regions'):
+                    existing.regions_json = json.dumps(record['regions'], ensure_ascii=False)
                 if not existing.location and record.get('location'):
                     existing.location = record['location']
                 if not existing.fishes_json and record.get('fishes'):
@@ -1722,6 +1740,7 @@ if __name__ == '__main__':
                 description=record.get('description', ''),
                 type=record.get('type', 'Водоём'),
                 region=record.get('region', ''),
+                regions_json=json.dumps(record.get('regions') or ([record.get('region')] if record.get('region') else []), ensure_ascii=False),
                 location=record.get('location', record.get('region', '')),
                 fishes_json=json.dumps(record.get('fishes') or [], ensure_ascii=False),
                 methods=record.get('methods', ''),
