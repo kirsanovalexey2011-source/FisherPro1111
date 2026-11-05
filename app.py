@@ -911,6 +911,13 @@ def spots():
         _CACHE['fishes_list'] = sorted(list({s['fish_clean'] for s in all_spots if s['fish_clean'] != 'Не указана'}))
         _CACHE['places_list'] = sorted(
             list({s['waterbody_clean'] for s in all_spots if s['waterbody_clean'] != 'Неизвестный водоём'}))
+        for database_spot in Spot.query.all():
+            if database_spot.fish_caught:
+                _CACHE['fishes_list'].append(database_spot.fish_caught)
+            if database_spot.waterbody:
+                _CACHE['places_list'].append(database_spot.waterbody)
+        _CACHE['fishes_list'] = sorted(set(_CACHE['fishes_list']))
+        _CACHE['places_list'] = sorted(set(_CACHE['places_list']))
 
     return render_template(
         'spots.html',
@@ -1092,6 +1099,10 @@ def add_spot():
         photos = report_photos_from_uploads()
     except ValueError as error:
         flash(str(error), 'error')
+        return redirect(url_for('map_page'))
+    except OSError:
+        app.logger.exception('Could not store fishing report photos')
+        flash('Не удалось сохранить фотографии. Проверьте свободное место и права на запись.', 'error')
         return redirect(url_for('map_page'))
 
     description = notes[:4000]
