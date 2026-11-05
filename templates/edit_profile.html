@@ -1,18 +1,41 @@
 {% extends "base.html" %}
-{% block title %}Редактирование профиля — ФишЭксперт{% endblock %}
+{% block title %}Настройки профиля — ФишЭксперт{% endblock %}
 {% block content %}
-<section class="fe-auth-wrap">
-  <div class="fe-auth-card fe-edit-card">
-    <p class="fe-eyebrow">Ваш аккаунт</p>
-    <h1>Редактировать профиль</h1>
-    <p class="fe-muted">Расскажите другим рыбакам немного о себе.</p>
-    <form method="post" class="fe-auth-form">
-      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-      <label>О себе<textarea class="fe-input" name="bio" rows="5" maxlength="1000" placeholder="Какие способы ловли предпочитаете?">{{ current_user.bio or '' }}</textarea><span class="fe-muted text-xs">До 1000 символов.</span></label>
-      <label>Любимая снасть<input class="fe-input" type="text" name="favorite_tackle" maxlength="100" value="{{ current_user.favorite_tackle or '' }}" placeholder="Например, спиннинг"></label>
-      <button class="fe-button w-full" type="submit">Сохранить изменения</button>
-      <a class="fe-button-secondary w-full text-center no-underline" href="{{ url_for('user_profile', username=current_user.username) }}">Отмена</a>
-    </form>
-  </div>
+<section class="fe-settings-page">
+  <header class="fe-settings-heading">
+    <a href="{{ url_for('user_profile', username=current_user.username) }}" class="fe-settings-back"><i class="fa-solid fa-arrow-left"></i> Вернуться в профиль</a>
+    <span class="fe-eyebrow">Управление аккаунтом</span>
+    <h1>Настройки профиля</h1>
+    <p>Обнови информацию о себе, фотографию и пароль. Изменения сохраняются в твоём аккаунте.</p>
+  </header>
+
+  <form method="post" enctype="multipart/form-data" class="fe-settings-form">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <section class="fe-settings-card">
+      <div class="fe-settings-card-title"><span><i class="fa-regular fa-id-card"></i></span><div><h2>Публичный профиль</h2><p>Эту информацию увидят другие участники сообщества.</p></div></div>
+      <div class="fe-settings-avatar-row">
+        <div class="fe-settings-avatar">
+          {% if current_user.avatar and current_user.avatar.startswith('uploads/avatars/') %}
+            <img src="{{ url_for('static', filename=current_user.avatar) }}" alt="Текущий аватар">
+          {% else %}<span>{{ current_user.username[:1] | upper }}</span>{% endif %}
+        </div>
+        <label class="fe-settings-upload">Загрузить фотографию<input type="file" name="avatar" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif"><small>JPG, PNG, WEBP или GIF. До 3 МБ.</small></label>
+      </div>
+      <label class="fe-settings-field">Имя пользователя<input class="fe-input" type="text" value="{{ current_user.username }}" disabled><small>Имя пользователя нельзя изменить здесь.</small></label>
+      <label class="fe-settings-field">О себе<textarea class="fe-input" name="bio" rows="5" maxlength="1000" placeholder="Расскажи о любимых местах, способах ловли и своём опыте...">{{ current_user.bio or '' }}</textarea><small>До 1000 символов.</small></label>
+      <label class="fe-settings-field">Любимая снасть<input class="fe-input" type="text" name="favorite_tackle" maxlength="100" value="{{ current_user.favorite_tackle or '' }}" placeholder="Например, спиннинг или фидер"></label>
+    </section>
+
+    <section class="fe-settings-card">
+      <div class="fe-settings-card-title"><span><i class="fa-solid fa-shield-halved"></i></span><div><h2>Безопасность</h2><p>Для смены пароля сначала подтверди текущий.</p></div></div>
+      <label class="fe-settings-field">Текущий пароль<input class="fe-input" type="password" name="current_password" autocomplete="current-password" placeholder="Введи текущий пароль"></label>
+      <div class="fe-settings-password-grid">
+        <label class="fe-settings-field">Новый пароль<input class="fe-input" type="password" name="new_password" autocomplete="new-password" minlength="10" maxlength="1024" placeholder="Не менее 10 символов"></label>
+        <label class="fe-settings-field">Повтори новый пароль<input class="fe-input" type="password" name="password_confirmation" autocomplete="new-password" minlength="10" maxlength="1024" placeholder="Повтори пароль"></label>
+      </div>
+      <p class="fe-settings-security-note"><i class="fa-solid fa-lock"></i> Если поля пароля оставить пустыми, пароль не изменится.</p>
+    </section>
+    <div class="fe-settings-actions"><button class="fe-button" type="submit"><i class="fa-solid fa-check"></i> Сохранить изменения</button><a class="fe-button-secondary" href="{{ url_for('user_profile', username=current_user.username) }}">Отмена</a></div>
+  </form>
 </section>
 {% endblock %}
