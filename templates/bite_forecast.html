@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Прогноз клёва — ФишЭксперт{% endblock %}
+{% block content %}
+<section class="max-w-5xl mx-auto space-y-8">
+<header class="space-y-3"><p class="fe-eyebrow"><i class="fa-solid fa-cloud-sun-rain"></i> Помощник рыбака</p><h1 class="fe-heading text-4xl sm:text-5xl">Прогноз клёва</h1><p class="fe-muted max-w-3xl">Оцените сочетание погоды, времени суток и типа рыбы перед поездкой. Укажите текущие или ожидаемые условия.</p></header>
+<form method="post" class="fe-card p-5 sm:p-7 space-y-6">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<div><h2 class="text-xl font-extrabold">Погодные условия</h2><p class="fe-muted text-sm mt-1">Введите значения из прогноза погоды или своих наблюдений.</p></div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="fe-forecast-field"><label for="temperature">Температура, °C</label><input id="temperature" name="temperature" type="number" min="-10" max="40" step="0.1" required value="{{ form_values.temperature }}"></div>
+<div class="fe-forecast-field"><label for="pressure">Давление, мм рт. ст.</label><input id="pressure" name="pressure" type="number" min="680" max="800" step="1" required value="{{ form_values.pressure }}"></div>
+<div class="fe-forecast-field"><label for="wind">Ветер, м/с</label><input id="wind" name="wind" type="number" min="0" max="25" step="0.1" required value="{{ form_values.wind }}"></div>
+<div class="fe-forecast-field"><label for="cloud">Облачность, %</label><input id="cloud" name="cloud" type="number" min="0" max="100" step="1" required value="{{ form_values.cloud }}"></div>
+<div class="fe-forecast-field"><label for="pressure_trend">Изменение давления</label><select id="pressure_trend" name="pressure_trend"><option value="stable" {% if form_values.pressure_trend == 'stable' %}selected{% endif %}>Стабильное</option><option value="rising" {% if form_values.pressure_trend == 'rising' %}selected{% endif %}>Растёт</option><option value="falling" {% if form_values.pressure_trend == 'falling' %}selected{% endif %}>Падает</option></select></div>
+<div class="fe-forecast-field"><label for="precipitation">Осадки</label><select id="precipitation" name="precipitation"><option value="none" {% if form_values.precipitation == 'none' %}selected{% endif %}>Нет</option><option value="light" {% if form_values.precipitation == 'light' %}selected{% endif %}>Небольшие</option><option value="heavy" {% if form_values.precipitation == 'heavy' %}selected{% endif %}>Сильные</option></select></div>
+<div class="fe-forecast-field"><label for="time_of_day">Время рыбалки</label><select id="time_of_day" name="time_of_day"><option value="morning" {% if form_values.time_of_day == 'morning' %}selected{% endif %}>Утро</option><option value="day" {% if form_values.time_of_day == 'day' %}selected{% endif %}>День</option><option value="evening" {% if form_values.time_of_day == 'evening' %}selected{% endif %}>Вечер</option><option value="night" {% if form_values.time_of_day == 'night' %}selected{% endif %}>Ночь</option></select></div>
+<div class="fe-forecast-field"><label for="water_type">Тип водоёма</label><select id="water_type" name="water_type"><option value="lake" {% if form_values.water_type == 'lake' %}selected{% endif %}>Озеро</option><option value="river" {% if form_values.water_type == 'river' %}selected{% endif %}>Река</option></select></div>
+<div class="fe-forecast-field sm:col-span-2"><label for="fish_group">Какую рыбу планируете ловить?</label><select id="fish_group" name="fish_group"><option value="predatory" {% if form_values.fish_group == 'predatory' %}selected{% endif %}>Хищную (щука, окунь, судак)</option><option value="peaceful" {% if form_values.fish_group == 'peaceful' %}selected{% endif %}>Мирную (карп, лещ, карась)</option><option value="coldwater" {% if form_values.fish_group == 'coldwater' %}selected{% endif %}>Холодолюбивую (форель, сиг)</option></select></div>
+</div><button type="submit" class="fe-button"><i class="fa-solid fa-calculator"></i> Рассчитать условия клёва</button>
+</form>
+{% if forecast %}<section class="fe-forecast-result space-y-5" aria-live="polite">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><p class="fe-eyebrow">Индекс условий · {{ forecast.fish_label }} · {{ forecast.water_label }}</p><h2 class="text-2xl font-extrabold mt-2">{{ forecast.title }}</h2></div><div class="fe-forecast-score">{{ forecast.score }}<span class="text-2xl">/100</span></div></div>
+<p class="fe-muted">{{ forecast.advice }}</p><div class="space-y-2"><h3 class="font-extrabold">Что повлияло на оценку</h3>{% for kind, explanation in forecast.factors %}<div class="fe-forecast-factor flex items-start gap-3"><span class="font-extrabold {% if kind == 'Плюс' %}text-emerald-500{% elif kind == 'Минус' %}text-amber-500{% else %}fe-muted{% endif %}">{{ kind }}</span><span class="text-sm">{{ explanation }}</span></div>{% endfor %}</div>
+</section>{% endif %}
+<aside class="fe-card p-5 sm:p-6 space-y-2"><h2 class="font-extrabold"><i class="fa-solid fa-circle-info mr-2" style="color:var(--fe-accent)"></i>Важно знать</h2><p class="fe-muted text-sm">Это ориентировочная экспертная шкала, а не измеренная вероятность поклёвки и не прогноз от метеостанции. Реальная активность зависит также от сезона, температуры воды, глубины, кормовой базы и конкретного водоёма. Проверяйте местные правила и погодные предупреждения.</p></aside>
+</section>
+{% endblock %}
