@@ -16,20 +16,6 @@
         </p>
     </div>
 
-    <!-- Уведомления Flash -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="bg-cyan-950/90 border border-cyan-500 text-cyan-200 px-5 py-4 rounded-xl text-sm flex items-center justify-between shadow-lg shadow-cyan-950/50">
-              <div class="flex items-center gap-3">
-                  <i class="fa-solid fa-circle-check text-cyan-400 text-xl"></i>
-                  <span>{{ message }}</span>
-              </div>
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-
     <!-- Главная сетка: Карточки + Форма -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
