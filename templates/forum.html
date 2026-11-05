@@ -1,6 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Форум рыболовов — ФишЭксперт{% endblock %}
+{% block title %}Форум рыболовов — ФишЭксперт{% endif %}
+{% endblock %}
 {% block content %}
+{% if topic is defined %}
+<section class="max-w-4xl mx-auto space-y-5 py-6"><a href="{{ url_for('forum') }}">← Все обсуждения</a><h1 class="text-3xl font-bold">{{ topic.title }}</h1><p>{{ topic.author.username }} · {{ topic.category }}</p><p class="whitespace-pre-wrap">{{ topic.body }}</p>{% for reply in replies %}<article id="reply-{{ reply.id }}" class="rounded-xl border p-4"><b>{{ reply.author.username }}</b><p class="whitespace-pre-wrap">{{ reply.body }}</p></article>{% endfor %}{% if current_user.is_authenticated and not topic.is_locked %}<form method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><textarea name="body" required minlength="2" maxlength="5000"></textarea><button type="submit">Отправить ответ</button></form>{% endif %}</section>
+{% else %}
 <section class="max-w-6xl mx-auto space-y-6 py-6">
   <header class="rounded-3xl border border-emerald-700/30 bg-gradient-to-br from-emerald-950 to-slate-950 p-6 md:p-9">
     <span class="text-xs font-bold uppercase tracking-widest text-emerald-300">Сообщество ФишЭксперт</span>
