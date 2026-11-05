@@ -213,9 +213,10 @@ class ForumTopic(db.Model):
     category = db.Column(db.String(40), nullable=False, default='Общее')
     body = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     is_locked = db.Column(db.Boolean, default=False, nullable=False)
+    author = db.relationship('User', foreign_keys=[user_id])
     replies = db.relationship('ForumReply', backref='topic', lazy='dynamic', cascade='all, delete-orphan')
 
 
@@ -223,19 +224,24 @@ class ForumReply(db.Model):
     __tablename__ = 'forum_replies'
     id = db.Column(db.Integer, primary_key=True)
     topic_id = db.Column(db.Integer, db.ForeignKey('forum_topics.id'), nullable=False, index=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     body = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    author = db.relationship('User', foreign_keys=[user_id])
 
 
 class ForumNotification(db.Model):
     __tablename__ = 'forum_notifications'
     id = db.Column(db.Integer, primary_key=True)
     recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-    topic_id = db.Column(db.Integer, db.ForeignKey('forum_topics.id'), nullable=False)
-    reply_id = db.Column(db.Integer, db.ForeignKey('forum_replies.id'), nullable=False)
+    topic_id = db.Column(db.Integer, db.ForeignKey('forum_topics.id'), nullable=False, index=True)
+    reply_id = db.Column(db.Integer, db.ForeignKey('forum_replies.id'), nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    is_read = db.Column(db.Boolean, default=False, nullable=False)
+    is_read = db.Column(db.Boolean, default=False, nullable=False, index=True)
+    recipient = db.relationship('User', foreign_keys=[recipient_id])
+    topic = db.relationship('ForumTopic', foreign_keys=[topic_id])
+    reply = db.relationship('ForumReply', foreign_keys=[reply_id])
+    __table_args__ = (db.UniqueConstraint('recipient_id', 'reply_id', name='unique_forum_reply_notification'),)
 
 
 @login_manager.user_loader
@@ -1466,20 +1472,134 @@ def recipe_detail(recipe_id):
     return render_template('recipe_detail.html', recipe=recipe)
 
 
-@app.route('/forum')
+FORUM_CATEGORIES = ('Общее', 'Отчёты о рыбалке', 'Снасти и техника', 'Водоёмы и места', 'Вопросы новичков')
+
+
+@app.route('/forum', methods=['GET', 'POST'])
 def forum():
+    if request.method == 'POST':
+        if not current_user.is_authenticated:
+            return redirect(url_for('login', next=url_for('forum')))
+        validate_csrf()
+        title = request.form.get('title', '').strip()
+        body = request.form.get('body', '').strip()
+        category = request.form.get('category', 'Общее').strip()
+        errors = []
+        if not 5 <= len(title) <= 140:
+            errors.append('Заголовок должен содержать от 5 до 140 символов.')
+        if not 10 <= len(body) <= 10000:
+            errors.append('Текст темы должен содержать от 10 до 10 000 символов.')
+        if category not in FORUM_CATEGORIES:
+            errors.append('Выберите категорию из списка.')
+        if errors:
+            for error in errors:
+                flash(error, 'error')
+        else:
+            topic = ForumTopic(title=title, body=body, category=category, user_id=current_user.id)
+            db.session.add(topic)
+            db.session.commit()
+            flash('Тема опубликована.', 'success')
+            return redirect(url_for('forum_topic', topic_id=topic.id))
+
     search_query = request.args.get('q', '').strip()[:100]
     category_filter = request.args.get('category', '').strip()
     query = ForumTopic.query
     if search_query:
         pattern = f'%{search_query}%'
-        query = query.filter(db.or_(ForumTopic.title.ilike(pattern), ForumTopic.body.ilike(pattern)))
-    categories = ('Общее', 'Отчёты о рыбалке', 'Снасти и техника', 'Водоёмы и места', 'Вопросы новичков')
-    if category_filter in categories:
+        reply_topic_ids = db.session.query(ForumReply.topic_id).filter(ForumReply.body.ilike(pattern))
+        query = query.filter(db.or_(
+            ForumTopic.title.ilike(pattern),
+            ForumTopic.body.ilike(pattern),
+            ForumTopic.id.in_(reply_topic_ids)
+        ))
+    if category_filter in FORUM_CATEGORIES:
         query = query.filter_by(category=category_filter)
-    topics = query.order_by(ForumTopic.updated_at.desc()).limit(100).all()
-    return render_template('forum.html', topics=topics, search_query=search_query,
-                           category_filter=category_filter, categories=categories)
+    page = max(1, request.args.get('page', 1, type=int) or 1)
+    total = query.count()
+    topics = query.order_by(ForumTopic.updated_at.desc(), ForumTopic.id.desc()).offset((page - 1) * 20).limit(20).all()
+    return render_template(
+        'forum.html', topics=topics, search_query=search_query,
+        category_filter=category_filter, categories=FORUM_CATEGORIES,
+        page=page, pages=max(1, (total + 19) // 20), total_topics=total
+    )
+
+
+@app.route('/forum/<int:topic_id>', methods=['GET', 'POST'])
+def forum_topic(topic_id):
+    topic = ForumTopic.query.get_or_404(topic_id)
+    if request.method == 'POST':
+        if not current_user.is_authenticated:
+            return redirect(url_for('login', next=url_for('forum_topic', topic_id=topic.id)))
+        validate_csrf()
+        body = request.form.get('body', '').strip()
+        if topic.is_locked:
+            flash('Обсуждение закрыто для новых ответов.', 'error')
+        elif not 2 <= len(body) <= 5000:
+            flash('Ответ должен содержать от 2 до 5000 символов.', 'error')
+        else:
+            reply = ForumReply(topic_id=topic.id, user_id=current_user.id, body=body)
+            db.session.add(reply)
+            topic.updated_at = datetime.utcnow()
+            db.session.flush()
+            participants = {topic.user_id}
+            participants.update(
+                row[0] for row in db.session.query(ForumReply.user_id)
+                .filter(ForumReply.topic_id == topic.id, ForumReply.user_id != current_user.id).distinct()
+            )
+            participants.discard(current_user.id)
+            for recipient_id in participants:
+                exists = ForumNotification.query.filter_by(
+                    recipient_id=recipient_id, reply_id=reply.id
+                ).first()
+                if not exists:
+                    db.session.add(ForumNotification(
+                        recipient_id=recipient_id, topic_id=topic.id, reply_id=reply.id
+                    ))
+            db.session.commit()
+            flash('Ответ опубликован.', 'success')
+            return redirect(url_for('forum_topic', topic_id=topic.id) + f'#reply-{reply.id}')
+
+    if current_user.is_authenticated:
+        ForumNotification.query.filter_by(
+            recipient_id=current_user.id, topic_id=topic.id, is_read=False
+        ).update({'is_read': True}, synchronize_session=False)
+        db.session.commit()
+    replies = topic.replies.order_by(ForumReply.created_at.asc(), ForumReply.id.asc()).all()
+    return render_template('forum_topic.html', topic=topic, replies=replies)
+
+
+@app.route('/forum/notifications')
+@login_required
+def forum_notifications():
+    notifications = ForumNotification.query.filter_by(
+        recipient_id=current_user.id
+    ).order_by(ForumNotification.created_at.desc(), ForumNotification.id.desc()).limit(100).all()
+    unread_count = ForumNotification.query.filter_by(recipient_id=current_user.id, is_read=False).count()
+    return render_template('forum_notifications.html', notifications=notifications, unread_count=unread_count)
+
+
+@app.route('/forum/notifications/<int:notification_id>/open', methods=['POST'])
+@login_required
+def open_forum_notification(notification_id):
+    validate_csrf()
+    notification = ForumNotification.query.filter_by(
+        id=notification_id, recipient_id=current_user.id
+    ).first_or_404()
+    notification.is_read = True
+    db.session.commit()
+    return redirect(url_for('forum_topic', topic_id=notification.topic_id) + f'#reply-{notification.reply_id}')
+
+
+@app.route('/forum/notifications/read-all', methods=['POST'])
+@login_required
+def read_all_forum_notifications():
+    validate_csrf()
+    ForumNotification.query.filter_by(recipient_id=current_user.id, is_read=False).update(
+        {'is_read': True}, synchronize_session=False
+    )
+    db.session.commit()
+    flash('Все уведомления отмечены как прочитанные.', 'success')
+    return redirect(url_for('forum_notifications'))
 
 
 @app.route('/contacts')
