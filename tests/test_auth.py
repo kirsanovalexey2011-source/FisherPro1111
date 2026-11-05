@@ -357,4 +357,15 @@ def test_forum_rejects_invalid_topic_and_reply(client):
     assert response.status_code == 200
     with app.app_context():
         assert ForumTopic.query.count() == 0
+        topic = ForumTopic(title='Корректная тема', category='Общее', body='Подробное описание темы.', user_id=user_id)
+        db.session.add(topic)
+        db.session.commit()
+        topic_id = topic.id
+
+    response = client.post(f'/forum/{topic_id}', data={
+        '_csrf_token': 'forum-csrf', 'body': 'x'
+    }, follow_redirects=False)
+    assert response.status_code == 200
+    with app.app_context():
+        assert ForumReply.query.filter_by(topic_id=topic_id).count() == 0
 
